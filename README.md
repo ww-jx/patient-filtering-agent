@@ -31,6 +31,7 @@ This project currently uses synthetic patient data for testing.
 
 1. Download "100 Sample Synthetic Patient Records, C-CDA" (XML) from [Synthea Downloads](https://synthea.mitre.org/downloads)
 2. Extract the files and place them in the `src/data` directory.
+3. Choose one file as the fake patient, and add its filename to the .env file
 
 ### 5. Run the development server
 
