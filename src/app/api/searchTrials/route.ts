@@ -1,33 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
+import { buildEssieQuery } from "@/lib/buildEssieQuery";
 
 // get trials from ClinicalTrials.gov API
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const keywords = searchParams.get("keywords");
+  const keywords = searchParams.get("keywords") || "";
+  const statuses = searchParams.get("statuses")?.split(",") || [];
+  const location = searchParams.get("location") || "";
+  const pageToken = searchParams.get("pageToken") || "";
+
+  console.log("Search params:", { keywords, statuses, location, pageToken });
 
   if (!keywords) {
     return NextResponse.json({ error: "Missing keywords" }, { status: 400 });
   }
 
+  let queryParams: Record<string, string> = {
+    "query.term": keywords,
+    format: "json",
+    pageSize: "10",
+  };
+
+  if (pageToken) queryParams.pageToken = pageToken;
+
   try {
-    const params = new URLSearchParams({
-      "query.term": keywords,
-      format: "json",
-      pageSize: "10",
-    });
+    // 1️⃣ Try building Essie query using LLM
+    const essieQuery = await buildEssieQuery({ keywords, statuses, location });
+    console.log("LLM-generated Essie query:", essieQuery);
 
-    // optional status filter
-    const statusFilter = searchParams.get("filter.overallStatus");
-    if (statusFilter) {
-      params.set("filter.overallStatus", statusFilter);
-    }
+    // overwrite queryParams with LLM-generated flat keys
+    queryParams = { ...queryParams, ...essieQuery.queryParams };
+  } catch (err) {
+    console.error("LLM Essie query generation failed, falling back to manual params:", err);
 
-    if (searchParams.get("pageToken")) {
-      params.set("pageToken", searchParams.get("pageToken")!);
-    }
+    // 2️⃣ Fallback: manually add statuses and location
+    if (statuses.length > 0) queryParams["filter.overallStatus"] = statuses.join("|");
+    if (location) queryParams["query.locn"] = location;
+  }
 
-    const res = await fetch(`https://clinicaltrials.gov/api/v2/studies?${params.toString()}`);
+  const apiUrl = `https://clinicaltrials.gov/api/v2/studies?${new URLSearchParams(queryParams).toString()}`;
+  console.log("ClinicalTrials.gov API URL:", apiUrl);
 
+  try {
+    const res = await fetch(apiUrl);
     if (!res.ok) {
       const text = await res.text();
       console.error("ClinicalTrials.gov API error:", text);
@@ -37,12 +52,25 @@ export async function GET(req: NextRequest) {
     const data = await res.json();
 
     // map to simplified structure
-    const studies = (data.studies || []).map((s: any) => ({
-      nctId: s.protocolSection.identificationModule.nctId,
-      title: s.protocolSection.identificationModule.briefTitle,
-      status: s.protocolSection.statusModule.overallStatus,
-      description: s.protocolSection.briefSummary?.textBlock || "",
-    }));
+    const studies = (data.studies || []).map((s: any) => {
+      const locations =
+        s.protocolSection.contactsLocationsModule?.locations?.map((loc: any) => {
+          const city = loc.city?.name;
+          const state = loc.state?.name;
+          const country = loc.country;
+          return [city, state, country].filter(Boolean).join(", ");
+        }).filter(Boolean) || [];
+
+      return {
+        nctId: s.protocolSection.identificationModule.nctId,
+        title: s.protocolSection.identificationModule.briefTitle,
+        status: s.protocolSection.statusModule.overallStatus,
+        startDate: s.protocolSection.statusModule.startDateStruct?.date || "N/A",
+        completionDate: s.protocolSection.statusModule.completionDateStruct?.date || "N/A",
+        description: s.protocolSection.briefSummary?.textBlock || "",
+        locations: [...new Set(locations)],
+      };
+    });
 
     return NextResponse.json({
       studies,

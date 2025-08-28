@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-//get trial details by nctId
+// Get trial details by nctId
 export async function GET(
   req: Request,
   { params }: { params: { nctId: string } }
@@ -9,7 +9,6 @@ export async function GET(
 
   try {
     const apiUrl = `https://clinicaltrials.gov/api/v2/studies/${nctId}?format=json&markupFormat=markdown`;
-
     const res = await fetch(apiUrl);
     if (!res.ok) {
       return NextResponse.json({ error: `Failed to fetch study: ${nctId}` }, { status: res.status });
@@ -20,6 +19,7 @@ export async function GET(
     const study = {
       protocolSection: {
         identificationModule: {
+          nctId: data.protocolSection?.identificationModule?.nctId || '',
           briefTitle: data.protocolSection?.identificationModule?.briefTitle || '',
           officialTitle: data.protocolSection?.identificationModule?.officialTitle || '',
           organization: {
@@ -28,12 +28,8 @@ export async function GET(
         },
         statusModule: {
           overallStatus: data.protocolSection?.statusModule?.overallStatus || '',
-          startDateStruct: {
-            date: data.protocolSection?.statusModule?.startDateStruct?.date || '',
-          },
-          completionDateStruct: {
-            date: data.protocolSection?.statusModule?.completionDateStruct?.date || '',
-          },
+          startDate: data.protocolSection?.statusModule?.startDateStruct?.date || '',
+          completionDate: data.protocolSection?.statusModule?.completionDateStruct?.date || '',
         },
         eligibilityModule: {
           eligibilityCriteria: data.protocolSection?.eligibilityModule?.eligibilityCriteria || '',
@@ -43,9 +39,19 @@ export async function GET(
           genderDescription: data.protocolSection?.eligibilityModule?.genderDescription || '',
           minimumAge: data.protocolSection?.eligibilityModule?.minimumAge || '',
           maximumAge: data.protocolSection?.eligibilityModule?.maximumAge || '',
-          stdAges: data.protocolSection?.eligibilityModule?.stdAges || [],
-          studyPopulation: data.protocolSection?.eligibilityModule?.studyPopulation || '',
-          samplingMethod: data.protocolSection?.eligibilityModule?.samplingMethod || '',
+        },
+        sponsorCollaboratorsModule: {
+          responsibleParty: data.protocolSection?.sponsorCollaboratorsModule?.responsibleParty || {},
+          leadSponsor: data.protocolSection?.sponsorCollaboratorsModule?.leadSponsor || {},
+          collaborators: data.protocolSection?.sponsorCollaboratorsModule?.collaborators || [],
+        },
+        contactsLocationsModule: {
+          centralContacts: data.protocolSection?.contactsLocationsModule?.centralContacts || [],
+          overallOfficials: data.protocolSection?.contactsLocationsModule?.overallOfficials || [],
+          locations: data.protocolSection?.contactsLocationsModule?.locations || [],
+        },
+        moreInfoModule: {
+          pointOfContact: data.protocolSection?.moreInfoModule?.pointOfContact || {},
         },
       },
     };

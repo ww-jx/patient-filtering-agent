@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// return n random patients
+// Return n random patients with relative file paths
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -23,13 +23,11 @@ export async function GET(req: Request) {
     // get desired number of patients
     const selectedFiles = files.slice(0, count);
 
-    const patients = selectedFiles.map(file => {
-      const xml = fs.readFileSync(path.join(dataDir, file), "utf-8");
-      return {
-        name: file.replace(".xml", ""),
-        xml,
-      };
-    });
+    const patients = selectedFiles.map(file => ({
+      name: file.replace(".xml", ""),
+      // relative path from project root
+      filePath: path.join("src/data", file),
+    }));
 
     return NextResponse.json({ patients });
   } catch (err: any) {

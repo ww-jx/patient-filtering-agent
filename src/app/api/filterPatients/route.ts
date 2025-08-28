@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
-import { geminiChat } from "@/app/lib/gemini";
+import { geminiChat } from "@/lib/gemini";
 import { Type } from "@google/genai";
 
-//check if patient is eligible for trial
+// Check if patient is eligible for trial
 export async function POST(req: Request) {
   try {
-    const { eligibilityCriteria, patientData } = await req.json();
+    const { eligibilityCriteria, filePath } = await req.json();
 
     const prompt = `
 You are a patient eligibility evaluator. 
 Given the eligibility criteria and a patient's data (XML format), respond with whether the patient is eligible.
+If a patient does not have a specific condition mentioned in the criteria, assume they are eligible, and mention to get that checked beforehand.
 
 Eligibility Criteria:
 ${JSON.stringify(eligibilityCriteria, null, 2)}
 
-Patient Data (XML):
-${patientData}
+Use the attached XML file for patient data.
 `;
 
     const config = {
@@ -31,7 +31,13 @@ ${patientData}
       },
     };
 
-    const result = await geminiChat(prompt, "gemini-2.5-flash", config);
+    // Pass patientData as a file
+    const result = await geminiChat(prompt, "gemini-2.5-flash", {
+      filePath: filePath, // full path to XML file
+      mimeType: "application/xml",
+      config,
+    });
+
     console.log("filterPatients result:", result);
 
     const jsonResult = JSON.parse(result);
