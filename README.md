@@ -23,7 +23,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Set your Gemini API key
+Set OpenRouter API key and model
 
 ### 4. Add synthetic patient data
 

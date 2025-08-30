@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
-import { geminiChat } from "@/lib/gemini";
-import { Type } from "@google/genai";
+import { openRouterChat } from "@/lib/openRouter";
+import fs from "fs";
+import path from "path";
 
 // Check if patient is eligible for trial
 export async function POST(req: Request) {
   try {
     const { eligibilityCriteria, filePath } = await req.json();
+
+    let patientXml = "";
+    if (filePath) {
+      const absPath = path.resolve(filePath);
+      patientXml = fs.readFileSync(absPath, "utf-8");
+    }
 
     const prompt = `
 You are a patient eligibility evaluator. 
@@ -15,36 +22,42 @@ If a patient does not have a specific condition mentioned in the criteria, assum
 Eligibility Criteria:
 ${JSON.stringify(eligibilityCriteria, null, 2)}
 
-Use the attached XML file for patient data.
+Patient Data (XML):
+\`\`\`xml
+${patientXml}
+\`\`\`
+
+Instructions:
+- Output a JSON object with keys:
+  - "eligible": true or false
+  - "explanation": string explaining the reasoning
+- Output only JSON, no extra text.
 `;
 
-    const config = {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
+    // Structured JSON schema for OpenRouter
+    const structuredOutput = {
+      type: "json_object" as const,
+      schema: {
+        type: "object",
         properties: {
-          eligible: { type: Type.BOOLEAN },
-          explanation: { type: Type.STRING },
+          eligible: { type: "boolean" },
+          explanation: { type: "string" },
         },
         required: ["eligible", "explanation"],
-        propertyOrdering: ["eligible", "explanation"],
+        additionalProperties: false,
       },
     };
 
-    // Pass patientData as a file
-    const result = await geminiChat(prompt, "gemini-2.5-flash", {
-      filePath: filePath, // full path to XML file
-      mimeType: "application/xml",
-      config,
-    });
+    const result = await openRouterChat(prompt, { structuredOutput });
 
     console.log("filterPatients result:", result);
 
-    const jsonResult = JSON.parse(result);
-
-    return NextResponse.json(jsonResult);
+    return NextResponse.json(result);
   } catch (err) {
     console.error("filterPatients error:", err);
-    return NextResponse.json({ error: "Failed to filter patient" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to filter patient" },
+      { status: 500 }
+    );
   }
 }

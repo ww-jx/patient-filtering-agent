@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildEssieQuery } from "@/lib/buildEssieQuery";
+import { buildCtgQuery } from "@/lib/buildCtgQuery";
 
 // get trials from ClinicalTrials.gov API
 export async function GET(req: NextRequest) {
@@ -24,14 +24,14 @@ export async function GET(req: NextRequest) {
   if (pageToken) queryParams.pageToken = pageToken;
 
   try {
-    // 1️⃣ Try building Essie query using LLM
-    const essieQuery = await buildEssieQuery({ keywords, statuses, location });
-    console.log("LLM-generated Essie query:", essieQuery);
+    // 1️⃣ Try building CTG query using LLM
+    const ctgQuery = await buildCtgQuery({ keywords, statuses, location });
+    console.log("LLM-generated CTG query:", ctgQuery);
 
     // overwrite queryParams with LLM-generated flat keys
-    queryParams = { ...queryParams, ...essieQuery.queryParams };
+    queryParams = { ...queryParams, ...ctgQuery.queryParams };
   } catch (err) {
-    console.error("LLM Essie query generation failed, falling back to manual params:", err);
+    console.error("LLM query generation failed, falling back to manual params:", err);
 
     // 2️⃣ Fallback: manually add statuses and location
     if (statuses.length > 0) queryParams["filter.overallStatus"] = statuses.join("|");
