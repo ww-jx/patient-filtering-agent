@@ -1,9 +1,13 @@
-import { parseCdaXml } from "@/lib/parseXml";
-import PatientPageClient from "./PatientPageClient";
+'use client';
 
-export default async function PatientPage() {
-  const patientXml = process.env.FAKE_PATIENT_FILE;
-  const profile = await parseCdaXml(patientXml!);
+import PatientPageClient from "./PatientPageClient";
+import type { PatientProfile } from "@/lib/types";
+
+interface Props {
+  profile: PatientProfile;
+}
+
+export default function PatientPageWrapper({ profile }: Props) {
 
   return <PatientPageClient profile={profile} />;
 }

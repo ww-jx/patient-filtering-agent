@@ -15,6 +15,7 @@ interface Study {
 export const useTrialsSearch = () => {
   const [studies, setStudies] = useState<Study[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [prevParams, setPrevParams] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -28,6 +29,7 @@ export const useTrialsSearch = () => {
     if (!keywords.trim()) {
       setStudies([]);
       setNextPageToken(null);
+      setPrevParams(null);
       return;
     }
 
@@ -47,18 +49,22 @@ export const useTrialsSearch = () => {
         url.searchParams.set('location', location);
       }
 
-      if (token) url.searchParams.set('pageToken', token);
+      if (token) {
+        url.searchParams.set('pageToken', token);
+        if (prevParams) {
+          url.searchParams.set('prevParams', prevParams);
+        }
+      }
 
       const res = await fetch(url.toString());
       const data = await res.json();
 
-      const now = new Date();
+      console.log("prev params:", data.prevParams);
+
+
       const filtered = (data.studies || []).filter((s: Study) => {
         if (selectedStatuses.length > 0 && !selectedStatuses.includes(s.status)) return false;
-        if (s.completionDate && s.completionDate !== 'N/A') {
-          const compDate = new Date(s.completionDate);
-          if (compDate < now) return false;
-        }
+
         return true;
       });
 
@@ -72,6 +78,7 @@ export const useTrialsSearch = () => {
       else setStudies(prev => [...prev, ...sorted]);
 
       setNextPageToken(data.nextPageToken || null);
+      setPrevParams(data.prevParams || null);
     } catch (err) {
       console.error(err);
     } finally {

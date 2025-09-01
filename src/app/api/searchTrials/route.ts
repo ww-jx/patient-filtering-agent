@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildCtgQuery } from "@/lib/buildCtgQuery";
 
+
 // get trials from ClinicalTrials.gov API
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -15,31 +16,38 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing keywords" }, { status: 400 });
   }
 
+  //base params
   let queryParams: Record<string, string> = {
-    "query.term": keywords,
     format: "json",
     pageSize: "10",
   };
 
-  if (pageToken) queryParams.pageToken = pageToken;
+  // for next/prev page
+  if (pageToken) {
+    queryParams.pageToken = pageToken;
+    const prevParams = searchParams.get("prevParms");
+    queryParams = { ...queryParams, ...(prevParams ? JSON.parse(prevParams) : {}) };
+  } else {
+    //for new search
+    try {
+      // 1️⃣ Try building CTG query using LLM
+      const ctgQuery = await buildCtgQuery({ keywords, statuses, location });
+      console.log("LLM-generated CTG query:", ctgQuery);
 
-  try {
-    // 1️⃣ Try building CTG query using LLM
-    const ctgQuery = await buildCtgQuery({ keywords, statuses, location });
-    console.log("LLM-generated CTG query:", ctgQuery);
+      // overwrite queryParams with LLM-generated flat keys
+      queryParams = { ...queryParams, ...ctgQuery.queryParams };
+    } catch (err) {
+      console.error("LLM query generation failed, falling back to manual params:", err);
 
-    // overwrite queryParams with LLM-generated flat keys
-    queryParams = { ...queryParams, ...ctgQuery.queryParams };
-  } catch (err) {
-    console.error("LLM query generation failed, falling back to manual params:", err);
+      // 2️⃣ Fallback: manually add statuses and location
+      if (statuses.length > 0) queryParams["filter.overallStatus"] = statuses.join("|");
+      if (location) queryParams["query.locn"] = location;
+    }
 
-    // 2️⃣ Fallback: manually add statuses and location
-    if (statuses.length > 0) queryParams["filter.overallStatus"] = statuses.join("|");
-    if (location) queryParams["query.locn"] = location;
   }
 
   const apiUrl = `https://clinicaltrials.gov/api/v2/studies?${new URLSearchParams(queryParams).toString()}`;
-  console.log("ClinicalTrials.gov API URL:", apiUrl);
+  console.log("ClinicalTrials.gov API query:", apiUrl);
 
   try {
     const res = await fetch(apiUrl);
@@ -52,29 +60,35 @@ export async function GET(req: NextRequest) {
     const data = await res.json();
 
     // map to simplified structure
-    const studies = (data.studies || []).map((s: any) => {
+    const studies = data.studies?.map((s: any) => {
+
       const locations =
         s.protocolSection.contactsLocationsModule?.locations?.map((loc: any) => {
-          const city = loc.city?.name;
-          const state = loc.state?.name;
+          const city = loc.city;
+          const state = loc.state;
           const country = loc.country;
           return [city, state, country].filter(Boolean).join(", ");
         }).filter(Boolean) || [];
 
-      return {
+      const study = {
         nctId: s.protocolSection.identificationModule.nctId,
         title: s.protocolSection.identificationModule.briefTitle,
         status: s.protocolSection.statusModule.overallStatus,
         startDate: s.protocolSection.statusModule.startDateStruct?.date || "N/A",
         completionDate: s.protocolSection.statusModule.completionDateStruct?.date || "N/A",
-        description: s.protocolSection.briefSummary?.textBlock || "",
+        description: s.protocolSection.descriptionModule.briefSummary || "",
         locations: [...new Set(locations)],
       };
+
+
+      return study;
     });
+
 
     return NextResponse.json({
       studies,
       nextPageToken: data.nextPageToken || null,
+      prevParms: JSON.stringify(queryParams),
     });
   } catch (err) {
     console.error("Server error:", err);

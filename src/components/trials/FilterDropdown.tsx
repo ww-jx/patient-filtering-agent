@@ -3,12 +3,17 @@
 import { useRef, useEffect, useState } from 'react';
 import { Filter, ChevronDown } from 'lucide-react';
 
+interface Location {
+  country?: string;
+  city?: string;
+}
+
 interface FilterDropdownProps {
   selected: string[];
   setSelected: (val: string[]) => void;
-  onApply: (locationType?: "profile" | "manual", locationValue?: string) => void;
-  patientAddress?: string; // only relevant for patients
-  isPatient?: boolean;     // true if filtering as a patient
+  onApply: (locationType?: 'profile' | 'manual', locationValue?: Location | string) => void;
+  patientAddress?: { city: string; country: string };
+  isPatient?: boolean;
 }
 
 const allowedStatuses = [
@@ -26,10 +31,11 @@ export const FilterDropdown = ({
   patientAddress,
   isPatient = false,
 }: FilterDropdownProps) => {
-  const [show, setShow] = useState(false);
-  const [locationType, setLocationType] = useState<"profile" | "manual">("profile");
-  const [manualLocation, setManualLocation] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
+  const [locationType, setLocationType] = useState<'profile' | 'manual'>('profile');
+  const [profileDetail, setProfileDetail] = useState<'country' | 'cityCountry'>('country');
+  const [manualLocation, setManualLocation] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -43,6 +49,24 @@ export const FilterDropdown = ({
     setSelected(prev =>
       prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
     );
+  };
+
+  const handleApply = () => {
+    let locationValue: Location | string | undefined;
+
+    if (isPatient) {
+      if (locationType === 'manual') {
+        locationValue = manualLocation || undefined;
+      } else if (locationType === 'profile' && patientAddress) {
+        locationValue =
+          profileDetail === 'country'
+            ? { country: patientAddress.country }
+            : { country: patientAddress.country, city: patientAddress.city };
+      }
+    }
+
+    onApply(locationType, locationValue);
+    setShow(false);
   };
 
   return (
@@ -63,7 +87,7 @@ export const FilterDropdown = ({
 
       {show && (
         <div className="absolute z-10 top-full mt-2 w-72 p-4 bg-white border border-slate-200 rounded-lg shadow-xl animate-fade-in-down">
-          {/* Status Filters */}
+          {/* Status */}
           <h3 className="font-semibold text-sm mb-2 text-slate-800">Overall Status</h3>
           <div className="space-y-2 max-h-40 overflow-y-auto mb-4">
             {allowedStatuses.map(status => (
@@ -79,36 +103,76 @@ export const FilterDropdown = ({
             ))}
           </div>
 
-          {/* Location filter only for patients */}
-          {isPatient && (
+          {/* Location */}
+          {isPatient && patientAddress && (
             <>
               <h3 className="font-semibold text-sm mb-2 text-slate-800">Location</h3>
+
+              {/* Profile vs Manual */}
               <div className="space-y-2">
+                {/* Profile */}
                 <div className="flex items-center space-x-2">
                   <input
                     type="radio"
                     id="profile"
                     name="locationType"
                     value="profile"
-                    checked={locationType === "profile"}
-                    onChange={() => setLocationType("profile")}
+                    checked={locationType === 'profile'}
+                    onChange={() => setLocationType('profile')}
                   />
                   <label htmlFor="profile" className="text-sm cursor-pointer">
-                    Use my profile address {patientAddress && <span className="text-slate-500">({patientAddress})</span>}
+                    Use my profile address (
+                    {profileDetail === 'country'
+                      ? patientAddress.country
+                      : `${patientAddress.city}, ${patientAddress.country}`}
+                    )
                   </label>
                 </div>
+
+                {/* Profile detail */}
+                {locationType === 'profile' && (
+                  <div className="ml-6 flex flex-col space-y-1">
+                    <label className="text-sm flex items-center">
+                      <input
+                        type="radio"
+                        name="profileDetail"
+                        value="country"
+                        checked={profileDetail === 'country'}
+                        onChange={() => setProfileDetail('country')}
+                        className="mr-2"
+                      />
+                      Country only ({patientAddress.country})
+                    </label>
+                    <label className="text-sm flex items-center">
+                      <input
+                        type="radio"
+                        name="profileDetail"
+                        value="cityCountry"
+                        checked={profileDetail === 'cityCountry'}
+                        onChange={() => setProfileDetail('cityCountry')}
+                        className="mr-2"
+                      />
+                      City + Country ({patientAddress.city}, {patientAddress.country})
+                    </label>
+                  </div>
+                )}
+
+                {/* Manual */}
                 <div className="flex items-center space-x-2">
                   <input
                     type="radio"
                     id="manual"
                     name="locationType"
                     value="manual"
-                    checked={locationType === "manual"}
-                    onChange={() => setLocationType("manual")}
+                    checked={locationType === 'manual'}
+                    onChange={() => setLocationType('manual')}
                   />
-                  <label htmlFor="manual" className="text-sm cursor-pointer">Enter a location</label>
+                  <label htmlFor="manual" className="text-sm cursor-pointer">
+                    {"Enter a location"}
+                  </label>
                 </div>
-                {locationType === "manual" && (
+
+                {locationType === 'manual' && (
                   <input
                     type="text"
                     value={manualLocation}
@@ -123,22 +187,7 @@ export const FilterDropdown = ({
 
           <div className="mt-4 flex justify-end">
             <button
-              onClick={() => {
-                if (isPatient) {
-                  // Only pass location if the user selected one or typed a manual value
-                  const locationToPass =
-                    locationType === "manual"
-                      ? manualLocation || undefined
-                      : locationType === "profile"
-                        ? patientAddress
-                        : undefined;
-
-                  onApply(locationToPass ? locationType : undefined, locationToPass);
-                } else {
-                  onApply();
-                }
-                setShow(false);
-              }}
+              onClick={handleApply}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
               Apply Filters

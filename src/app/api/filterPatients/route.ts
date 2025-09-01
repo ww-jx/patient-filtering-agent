@@ -1,31 +1,23 @@
 import { NextResponse } from "next/server";
 import { openRouterChat } from "@/lib/openRouter";
-import fs from "fs";
-import path from "path";
 
 // Check if patient is eligible for trial
 export async function POST(req: Request) {
   try {
-    const { eligibilityCriteria, filePath } = await req.json();
+    const { eligibilityCriteria, profile } = await req.json();
 
-    let patientXml = "";
-    if (filePath) {
-      const absPath = path.resolve(filePath);
-      patientXml = fs.readFileSync(absPath, "utf-8");
-    }
 
     const prompt = `
 You are a patient eligibility evaluator. 
-Given the eligibility criteria and a patient's data (XML format), respond with whether the patient is eligible.
+Given the eligibility criteria and a patient's data , respond with whether the patient is eligible.
 If a patient does not have a specific condition mentioned in the criteria, assume they are eligible, and mention to get that checked beforehand.
 
 Eligibility Criteria:
 ${JSON.stringify(eligibilityCriteria, null, 2)}
 
-Patient Data (XML):
-\`\`\`xml
-${patientXml}
-\`\`\`
+Patient Data:
+${JSON.stringify(profile, null, 2)}
+
 
 Instructions:
 - Output a JSON object with keys:

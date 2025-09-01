@@ -16,13 +16,11 @@ const priorityStatuses = ['RECRUITING', 'NOT_YET_RECRUITING', 'ENROLLING_BY_INVI
 
 interface TrialCardProps {
   study: Study;
-  patientFile?: string;
+  uuid: string;
 }
 
-export const TrialCard = ({ study, patientFile }: TrialCardProps) => {
-  const trialHref = patientFile
-    ? `/trials/${study.nctId}?patientFile=${encodeURIComponent(patientFile)}`
-    : `/trials/${study.nctId}`;
+export const TrialCard = ({ study, uuid }: TrialCardProps) => {
+  const trialHref = `/trials/${study.nctId}?patientUuid=${uuid}`;
   return (
     <div className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow space-y-2">
       {/* Clicking anywhere on this section goes to your internal trial page */}
@@ -32,8 +30,7 @@ export const TrialCard = ({ study, patientFile }: TrialCardProps) => {
         <p className="text-sm text-gray-600">
           Status:{' '}
           <span
-            className={`font-medium ${priorityStatuses.includes(study.status) ? 'text-green-600' : 'text-slate-800'
-              }`}
+            className={`font-medium ${priorityStatuses.includes(study.status) ? 'text-green-600' : 'text-slate-800'}`}
           >
             {study.status.replace(/_/g, ' ')}
           </span>

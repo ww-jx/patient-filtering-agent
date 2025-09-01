@@ -49,9 +49,9 @@ export async function buildCtgQuery(input: CtgQueryInput): Promise<CtgQueryOutpu
 
   const prompt = `
 You are a ClinicalTrials.gov query builder.
-- Keywords: "${keywords}"
-- Statuses: "${statuses?.join(", ") || "any"}"
-- Location: "${location || "none"}"
+- The user is looking for: ${keywords}
+- Filter by statuses: "${statuses?.join(", ") || "any"}"
+- In location: "${location || "none"}"
 
 API Specification:
 \`\`\`
@@ -60,11 +60,11 @@ ${openApiContent}
 
 Instructions:
 1. Use the API specification above to understand valid query parameters.
-2. Output a JSON object with keys:
-   - "query.term": Essie query string
-   - "filter.overallStatus": comma-separated statuses (if any)
-   - "query.locn": location string (if any)
+2. Output a JSON object that maps query parameter names to values, following the API spec.
 3. Output only JSON, no extra text.
+
+Rules:
+- Only fetch trials that are looking for test patients/recruiting.
 `;
 
   // Call OpenRouter
