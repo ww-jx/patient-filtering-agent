@@ -1,27 +1,90 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fefdfb
-;
-  --foreground: #171717;
-}
+  /* Dark warm background */
+  --background: #252729;
+  --foreground: #ffffff;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Giraffe accent colors */
+  --color-primary: #facc15;        /* yellow for headings */
+  --color-primary-hover: #eab308;
+  --color-secondary: #a16207;      /* brown for buttons/borders */
+  --color-secondary-hover: #78350f;
+  --color-success: #22c55e;
+  --color-success-hover: #16a34a;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-muted: #9ca3af;
+  --color-muted-hover: #6b7280;
+  --color-secondary-light: #3f2f1a;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Headings – yellow */
+h1,h2,h3,h4,h5,h6, .text-heading {
+  color: var(--color-primary);
+}
+
+/* Status messages */
+.status-info { color: var(--color-primary); }
+.status-success { color: var(--color-success); }
+.status-error { color: var(--color-danger); }
+
+/* Buttons – brown */
+.btn-primary {
+  background-color: var(--color-secondary);
+  color: var(--color-background);
+}
+.btn-primary:hover {
+  background-color: var(--color-secondary-hover);
+}
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-background);
+}
+.btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
+}
+
+/* Cards – brown outline */
+.card-bordered {
+  border: 1px solid var(--color-secondary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: box-shadow 0.2s;
+}
+.card-bordered:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Input placeholders */
+input::placeholder {
+  color: var(--color-muted);
+}
+
+
+/* Buttons – brown shades with padding and rounded corners */
+.btn-primary, .btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-background);
+  padding: 0.5rem 1rem;      /* vertical + horizontal */
+  border-radius: 0.5rem;     /* rounded corners */
+  font-size: 0.875rem;       /* small text */
+  font-weight: 500;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
+  cursor: pointer;
 }

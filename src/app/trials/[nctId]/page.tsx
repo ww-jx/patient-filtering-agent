@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
 import type { PatientProfile } from '@/lib/types';
-import { useSearchParams } from 'next/navigation';
 
-// Eligibility criteria structure
 interface EligibilityModule {
   eligibilityCriteria: string;
   healthyVolunteers: boolean;
@@ -16,13 +15,11 @@ interface EligibilityModule {
   maximumAge: string;
 }
 
-// Sponsor contact structure
 interface Sponsor {
   name?: string;
   class?: string;
 }
 
-// Contact structure
 interface Contact {
   name: string;
   role: string;
@@ -30,7 +27,6 @@ interface Contact {
   email?: string;
 }
 
-// Protocol section structure
 interface ProtocolSection {
   identificationModule: {
     nctId: string;
@@ -57,12 +53,10 @@ interface ProtocolSection {
   };
 }
 
-// Study structure
 interface Study {
   protocolSection: ProtocolSection;
 }
 
-// Patient result
 interface PatientResult {
   name: string;
   eligible: boolean;
@@ -80,10 +74,8 @@ export default function TrialPage() {
   const [results, setResults] = useState<PatientResult[]>([]);
   const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null);
 
-  // Fetch study
   useEffect(() => {
     if (!params.nctId) return;
-
     const fetchStudy = async () => {
       try {
         const res = await fetch(`/api/${params.nctId}`);
@@ -96,14 +88,11 @@ export default function TrialPage() {
         setLoading(false);
       }
     };
-
     fetchStudy();
   }, [params.nctId]);
 
-  // Fetch patient profile
   useEffect(() => {
     if (!patientUuid) return;
-
     const fetchPatient = async () => {
       try {
         const res = await fetch(`/api/users/${patientUuid}`);
@@ -114,7 +103,6 @@ export default function TrialPage() {
         console.error(err);
       }
     };
-
     fetchPatient();
   }, [patientUuid]);
 
@@ -122,21 +110,27 @@ export default function TrialPage() {
   if (!study) return <p className="text-center mt-10">Study not found.</p>;
 
   const { protocolSection } = study;
-  const { identificationModule, statusModule, eligibilityModule, sponsorCollaboratorsModule, contactsLocationsModule, moreInfoModule } = protocolSection;
+  const {
+    identificationModule,
+    statusModule,
+    eligibilityModule,
+    sponsorCollaboratorsModule,
+    contactsLocationsModule,
+    moreInfoModule,
+  } = protocolSection;
 
-  // Flatten sponsors
   const sponsors = [
     sponsorCollaboratorsModule?.leadSponsor,
-    ...(sponsorCollaboratorsModule?.collaborators || [])
+    ...(sponsorCollaboratorsModule?.collaborators || []),
   ].filter(Boolean);
 
-  // Flatten contacts
-  const contacts: any[] = [];
-  contactsLocationsModule?.centralContacts?.forEach(c => contacts.push(c));
-  contactsLocationsModule?.locations?.forEach(loc => loc.contacts?.forEach(c => contacts.push(c)));
+  const contacts: Contact[] = [];
+  contactsLocationsModule?.centralContacts?.forEach((c) => contacts.push(c));
+  contactsLocationsModule?.locations?.forEach((loc) =>
+    loc.contacts?.forEach((c) => contacts.push(c))
+  );
   if (moreInfoModule?.pointOfContact) contacts.push(moreInfoModule.pointOfContact);
 
-  // Filter patient eligibility
   const handleFilterPatients = async () => {
     if (!patientProfile) return;
     setFiltering(true);
@@ -145,14 +139,16 @@ export default function TrialPage() {
       const res = await fetch('/api/filterPatients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eligibilityCriteria: eligibilityStr, profile: patientProfile })
+        body: JSON.stringify({ eligibilityCriteria: eligibilityStr, profile: patientProfile }),
       });
       const data = await res.json();
-      setResults([{
-        name: patientProfile.email,
-        eligible: data.eligible,
-        explanation: data.explanation || 'Unable to determine eligibility'
-      }]);
+      setResults([
+        {
+          name: patientProfile.email,
+          eligible: data.eligible,
+          explanation: data.explanation || 'Unable to determine eligibility',
+        },
+      ]);
     } catch (err) {
       console.error('Error filtering patient:', err);
     } finally {
@@ -161,76 +157,102 @@ export default function TrialPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-6">
-      <button
-        onClick={() => window.history.back()}
-        className="mb-4 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded"
-      >
+    <div className="max-w-5xl mx-auto p-8 space-y-6 bg-[var(--background)] text-[var(--foreground)]">
+      {/* Back Button */}
+      <button onClick={() => window.history.back()} className="btn-secondary mb-4">
         ← Back
       </button>
 
+      <a
+        href={`https://clinicaltrials.gov/ct2/show/${params.nctId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-secondary text-sm"
+      >
+        View on ClinicalTrials.gov
+      </a>
+
       {/* Study Info */}
-      <div className="space-y-2">
+      <div className="space-y-2 card-bordered">
         <h1 className="text-3xl font-bold">{identificationModule.briefTitle}</h1>
-        <p className="italic text-gray-700">{identificationModule.officialTitle}</p>
-        <p className="text-sm text-gray-500">Organization: {identificationModule.organization.fullName}</p>
-        <p className="text-sm text-gray-500">
-          Status: <span className="font-semibold">{statusModule.overallStatus}</span> |
-          Start: {statusModule.startDate || 'N/A'} | Completion: {statusModule.completionDate || 'N/A'}
+        <p className="italic opacity-80">{identificationModule.officialTitle}</p>
+        <p className="text-sm opacity-70">
+          Organization: {identificationModule.organization.fullName}
         </p>
-        <p className="text-sm text-gray-500">Sponsor: {sponsors?.[0]?.name || 'N/A'}</p>
+        <p className="text-sm opacity-70">
+          Status: <span className="font-semibold">{statusModule.overallStatus}</span> | Start:{' '}
+          {statusModule.startDate || 'N/A'} | Completion: {statusModule.completionDate || 'N/A'}
+        </p>
+        <p className="text-sm opacity-70">Sponsor: {sponsors?.[0]?.name || 'N/A'}</p>
       </div>
 
-      <hr />
-
       {/* Eligibility */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold border-b pb-1">Eligibility Criteria</h2>
-        <pre className="whitespace-pre-line bg-gray-50 p-4 rounded shadow-sm text-gray-800">
-          {eligibilityModule.eligibilityCriteria || 'No eligibility info available.'}
-        </pre>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
-          <div><span className="font-medium">Healthy Volunteers:</span> {eligibilityModule.healthyVolunteers ? 'Yes' : 'No'}</div>
-          <div><span className="font-medium">Sex:</span> {eligibilityModule.sex}</div>
-          <div><span className="font-medium">Gender Based:</span> {eligibilityModule.genderBased ? 'Yes' : 'No'}</div>
+      <div className="space-y-4 card-bordered">
+        <h2 className="text-2xl font-semibold border-b pb-1 border-[var(--color-muted)]">
+          Eligibility Criteria
+        </h2>
+
+        <div className="prose prose-invert max-w-none bg-[var(--color-secondary-light)] p-4 rounded shadow-sm">
+          <ReactMarkdown>
+            {eligibilityModule.eligibilityCriteria || 'No eligibility info available.'}
+          </ReactMarkdown>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="font-medium">Healthy Volunteers:</span>{' '}
+            {eligibilityModule.healthyVolunteers ? 'Yes' : 'No'}
+          </div>
+          <div>
+            <span className="font-medium">Sex:</span> {eligibilityModule.sex}
+          </div>
+          <div>
+            <span className="font-medium">Gender Based:</span>{' '}
+            {eligibilityModule.genderBased ? 'Yes' : 'No'}
+          </div>
           {eligibilityModule.genderDescription && (
             <div className="md:col-span-2">
-              <span className="font-medium">Gender Description:</span> {eligibilityModule.genderDescription}
+              <span className="font-medium">Gender Description:</span>{' '}
+              {eligibilityModule.genderDescription}
             </div>
           )}
-          <div><span className="font-medium">Minimum Age:</span> {eligibilityModule.minimumAge || 'Not specified'}</div>
-          <div><span className="font-medium">Maximum Age:</span> {eligibilityModule.maximumAge || 'Not specified'}</div>
+          <div>
+            <span className="font-medium">Minimum Age:</span>{' '}
+            {eligibilityModule.minimumAge || 'Not specified'}
+          </div>
+          <div>
+            <span className="font-medium">Maximum Age:</span>{' '}
+            {eligibilityModule.maximumAge || 'Not specified'}
+          </div>
         </div>
 
         {patientProfile ? (
           <button
             onClick={handleFilterPatients}
             disabled={filtering}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="btn-primary"
           >
             {filtering ? 'Checking Eligibility...' : 'Check My Eligibility'}
           </button>
         ) : (
-          <p className="text-red-600">No patient selected. Provide a UUID in the URL.</p>
+          <p className="text-[var(--color-danger)]">No patient selected. Provide a UUID in the URL.</p>
         )}
       </div>
 
       {/* Patient Results */}
       {results.length > 0 && (
-        <div className="mt-6">
+        <div className="card-bordered">
           <h3 className="text-xl font-semibold mb-2">Eligibility Results</h3>
-          <table className="min-w-full border border-gray-300 text-sm">
-            <thead className="bg-gray-100">
+          <table className="min-w-full border border-[var(--color-muted)] text-sm rounded overflow-hidden">
+            <thead className="bg-[var(--color-muted)]/30">
               <tr>
-                <th className="border px-4 py-2 text-left">Patient</th>
                 <th className="border px-4 py-2 text-left">Eligible</th>
                 <th className="border px-4 py-2 text-left">Explanation</th>
               </tr>
             </thead>
             <tbody>
-              {results.map(r => (
+              {results.map((r) => (
                 <tr key={r.name}>
-                  <td className="border px-4 py-2">{r.name}</td>
                   <td className="border px-4 py-2">{r.eligible ? 'Yes' : 'No'}</td>
                   <td className="border px-4 py-2">{r.explanation}</td>
                 </tr>
@@ -242,15 +264,34 @@ export default function TrialPage() {
 
       {/* Contacts */}
       {contacts.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Contacts</h3>
-          <ul className="list-disc pl-5 text-sm text-gray-700">
-            {contacts.map((c, i) => (
-              <li key={i}>
-                {c.name} ({c.role}) {c.email && `- ${c.email}`} {c.phone && `- ${c.phone}`}
-              </li>
-            ))}
-          </ul>
+        <div className="card-bordered">
+          <details>
+            <summary className="cursor-pointer px-4 py-2 font-semibold bg-[var(--color-muted)]/20 rounded">
+              Contacts ({contacts.length})
+            </summary>
+            <div className="overflow-x-auto mt-2">
+              <table className="min-w-full border border-[var(--color-muted)] text-sm rounded overflow-hidden">
+                <thead className="bg-[var(--color-muted)]/30">
+                  <tr>
+                    <th className="border px-4 py-2 text-left">Name</th>
+                    <th className="border px-4 py-2 text-left">Role</th>
+                    <th className="border px-4 py-2 text-left">Email</th>
+                    <th className="border px-4 py-2 text-left">Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contacts.map((c, i) => (
+                    <tr key={i}>
+                      <td className="border px-4 py-2">{c.name || 'N/A'}</td>
+                      <td className="border px-4 py-2">{c.role || 'N/A'}</td>
+                      <td className="border px-4 py-2">{c.email || 'N/A'}</td>
+                      <td className="border px-4 py-2">{c.phone || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
         </div>
       )}
     </div>

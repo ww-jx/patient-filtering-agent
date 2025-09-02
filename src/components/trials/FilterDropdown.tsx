@@ -3,10 +3,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { Filter, ChevronDown } from 'lucide-react';
 
-interface Location {
-  country?: string;
-  city?: string;
-}
+interface Location { country?: string; city?: string; }
 
 interface FilterDropdownProps {
   selected: string[];
@@ -17,19 +14,12 @@ interface FilterDropdownProps {
 }
 
 const allowedStatuses = [
-  'ACTIVE_NOT_RECRUITING',
-  'ENROLLING_BY_INVITATION',
-  'NOT_YET_RECRUITING',
-  'RECRUITING',
-  'AVAILABLE',
+  'ACTIVE_NOT_RECRUITING', 'ENROLLING_BY_INVITATION',
+  'NOT_YET_RECRUITING', 'RECRUITING', 'AVAILABLE'
 ];
 
 export const FilterDropdown = ({
-  selected,
-  setSelected,
-  onApply,
-  patientAddress,
-  isPatient = false,
+  selected, setSelected, onApply, patientAddress, isPatient = false
 }: FilterDropdownProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
@@ -46,25 +36,18 @@ export const FilterDropdown = ({
   }, []);
 
   const toggleStatus = (status: string) => {
-    setSelected(prev =>
-      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-    );
+    setSelected(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]);
   };
-
   const handleApply = () => {
     let locationValue: Location | string | undefined;
-
     if (isPatient) {
-      if (locationType === 'manual') {
-        locationValue = manualLocation || undefined;
-      } else if (locationType === 'profile' && patientAddress) {
-        locationValue =
-          profileDetail === 'country'
-            ? { country: patientAddress.country }
-            : { country: patientAddress.country, city: patientAddress.city };
+      if (locationType === 'manual') locationValue = manualLocation || undefined;
+      else if (locationType === 'profile' && patientAddress) {
+        locationValue = profileDetail === 'country'
+          ? { country: patientAddress.country }
+          : { country: patientAddress.country, city: patientAddress.city };
       }
     }
-
     onApply(locationType, locationValue);
     setShow(false);
   };
@@ -73,42 +56,51 @@ export const FilterDropdown = ({
     <div ref={ref} className="relative">
       <button
         onClick={() => setShow(!show)}
-        className="bg-white border border-slate-300 rounded-lg p-3 text-slate-700 hover:bg-slate-100 transition flex items-center space-x-1"
+        className="btn-primary border-slate-300 h-8 md:h-10 lg:h-12 rounded-lg p-3 text-slate-700 hover:bg-slate-100 transition flex items-center space-x-1"
       >
         <Filter className="h-5 w-5" />
         <span>Filters</span>
+
+        {/* Show selected statuses count */}
         {(selected.length > 0 && selected.length < allowedStatuses.length) && (
           <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full ml-1">
             {selected.length}
           </span>
         )}
+
+
         <ChevronDown className={`h-4 w-4 transition-transform ${show ? 'rotate-180' : ''}`} />
       </button>
 
       {show && (
-        <div className="absolute z-10 top-full mt-2 w-72 p-4 bg-white border border-slate-200 rounded-lg shadow-xl animate-fade-in-down">
-          {/* Status */}
-          <h3 className="font-semibold text-sm mb-2 text-slate-800">Overall Status</h3>
+        <div
+          className="absolute z-10 top-full mt-2 w-72 p-4 text-foreground border border-secondary rounded-lg shadow-xl animate-fade-in-down"
+          style={{ backgroundColor: "var(--color-secondary-light)" }}
+        >
+          <h3 className="font-semibold text-sm mb-2 text-primary">Overall Status</h3>
           <div className="space-y-2 max-h-40 overflow-y-auto mb-4">
-            {allowedStatuses.map(status => (
-              <div key={status} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={selected.includes(status)}
-                  onChange={() => toggleStatus(status)}
-                  className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
-                />
-                <label className="text-sm cursor-pointer">{status.replace(/_/g, ' ')}</label>
-              </div>
-            ))}
+            {allowedStatuses.map(status => {
+              const selectedStatus = selected.includes(status);
+              return (
+                <div key={status} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedStatus}
+                    onChange={() => toggleStatus(status)}
+                    className={`rounded border-secondary focus:ring-2 focus:ring-primary 
+              ${selectedStatus ? 'bg-primary text-background border-primary' : 'bg-background'}`}
+                  />
+                  <label className={`text-sm cursor-pointer ${selectedStatus ? 'font-semibold text-primary' : ''}`}>
+                    {status.replace(/_/g, ' ')}
+                  </label>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Location */}
           {isPatient && patientAddress && (
             <>
-              <h3 className="font-semibold text-sm mb-2 text-slate-800">Location</h3>
-
-              {/* Profile vs Manual */}
+              <h3 className="font-semibold text-sm mb-2 text-primary">Location</h3>
               <div className="space-y-2">
                 {/* Profile */}
                 <div className="flex items-center space-x-2">
@@ -119,17 +111,16 @@ export const FilterDropdown = ({
                     value="profile"
                     checked={locationType === 'profile'}
                     onChange={() => setLocationType('profile')}
+                    className={`border-secondary focus:ring-2 focus:ring-primary 
+              ${locationType === 'profile' ? 'bg-primary text-background border-primary' : 'bg-background'}`}
                   />
-                  <label htmlFor="profile" className="text-sm cursor-pointer">
+                  <label htmlFor="profile" className={`text-sm cursor-pointer ${locationType === 'profile' ? 'font-semibold text-primary' : ''}`}>
                     Use my profile address (
-                    {profileDetail === 'country'
-                      ? patientAddress.country
-                      : `${patientAddress.city}, ${patientAddress.country}`}
+                    {profileDetail === 'country' ? patientAddress.country : `${patientAddress.city}, ${patientAddress.country}`}
                     )
                   </label>
                 </div>
 
-                {/* Profile detail */}
                 {locationType === 'profile' && (
                   <div className="ml-6 flex flex-col space-y-1">
                     <label className="text-sm flex items-center">
@@ -139,7 +130,8 @@ export const FilterDropdown = ({
                         value="country"
                         checked={profileDetail === 'country'}
                         onChange={() => setProfileDetail('country')}
-                        className="mr-2"
+                        className={`mr-2 border-secondary focus:ring-2 focus:ring-primary 
+                  ${profileDetail === 'country' ? 'bg-primary text-background border-primary' : 'bg-background'}`}
                       />
                       Country only ({patientAddress.country})
                     </label>
@@ -150,7 +142,8 @@ export const FilterDropdown = ({
                         value="cityCountry"
                         checked={profileDetail === 'cityCountry'}
                         onChange={() => setProfileDetail('cityCountry')}
-                        className="mr-2"
+                        className={`mr-2 border-secondary focus:ring-2 focus:ring-primary 
+                  ${profileDetail === 'cityCountry' ? 'bg-primary text-background border-primary' : 'bg-background'}`}
                       />
                       City + Country ({patientAddress.city}, {patientAddress.country})
                     </label>
@@ -166,9 +159,11 @@ export const FilterDropdown = ({
                     value="manual"
                     checked={locationType === 'manual'}
                     onChange={() => setLocationType('manual')}
+                    className={`border-secondary focus:ring-2 focus:ring-primary 
+              ${locationType === 'manual' ? 'bg-primary text-background border-primary' : 'bg-background'}`}
                   />
-                  <label htmlFor="manual" className="text-sm cursor-pointer">
-                    {"Enter a location"}
+                  <label htmlFor="manual" className={`text-sm cursor-pointer ${locationType === 'manual' ? 'font-semibold text-primary' : ''}`}>
+                    Enter a location
                   </label>
                 </div>
 
@@ -178,7 +173,7 @@ export const FilterDropdown = ({
                     value={manualLocation}
                     onChange={(e) => setManualLocation(e.target.value)}
                     placeholder="e.g. Boston, India"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                    className="w-full border border-secondary rounded-lg px-3 py-2 text-sm bg-background text-foreground"
                   />
                 )}
               </div>
@@ -188,7 +183,7 @@ export const FilterDropdown = ({
           <div className="mt-4 flex justify-end">
             <button
               onClick={handleApply}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              className="bg-secondary text-background px-4 py-2 rounded-lg font-semibold hover:bg-secondary-hover transition-colors text-sm"
             >
               Apply Filters
             </button>

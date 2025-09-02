@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 
 interface Study {
@@ -39,34 +37,25 @@ export const useTrialsSearch = () => {
       const url = new URL('/api/searchTrials', window.location.origin);
       url.searchParams.set('keywords', keywords);
 
-      // Only set status filter if user selected some statuses
       if (selectedStatuses.length > 0) {
-        url.searchParams.set('filter.overallStatus', selectedStatuses.join('|'));
+        url.searchParams.set('statuses', selectedStatuses.join(','));
       }
 
-      // Include location if provided
       if (location) {
         url.searchParams.set('location', location);
       }
 
-      if (token) {
+      if (token && prevParams) {
         url.searchParams.set('pageToken', token);
-        if (prevParams) {
-          url.searchParams.set('prevParams', prevParams);
-        }
+        url.searchParams.set('prevParams', prevParams); // base search params only
       }
 
       const res = await fetch(url.toString());
       const data = await res.json();
 
-      console.log("prev params:", data.prevParams);
-
-
-      const filtered = (data.studies || []).filter((s: Study) => {
-        if (selectedStatuses.length > 0 && !selectedStatuses.includes(s.status)) return false;
-
-        return true;
-      });
+      const filtered = (data.studies || []).filter(s =>
+        selectedStatuses.length === 0 || selectedStatuses.includes(s.status)
+      );
 
       const sorted = filtered.sort((a, b) => {
         const aDate = a.startDate && a.startDate !== 'N/A' ? new Date(a.startDate).getTime() : 0;

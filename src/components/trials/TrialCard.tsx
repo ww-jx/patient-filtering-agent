@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 
 interface Study {
   nctId: string;
@@ -12,55 +13,104 @@ interface Study {
   locations: string[];
 }
 
-const priorityStatuses = ['RECRUITING', 'NOT_YET_RECRUITING', 'ENROLLING_BY_INVITATION'];
-
 interface TrialCardProps {
   study: Study;
   uuid: string;
 }
 
+// Map each status to a color class
+const statusColors: Record<string, string> = {
+  RECRUITING: 'text-success',
+  NOT_YET_RECRUITING: 'text-yellow-400',
+  ENROLLING_BY_INVITATION: 'text-primary',
+  ACTIVE_NOT_RECRUITING: 'text-muted',
+  COMPLETED: 'text-muted',
+  TERMINATED: 'text-danger',
+  WITHDRAWN: 'text-danger',
+};
+
 export const TrialCard = ({ study, uuid }: TrialCardProps) => {
   const trialHref = `/trials/${study.nctId}?patientUuid=${uuid}`;
-  return (
-    <div className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow space-y-2">
-      {/* Clicking anywhere on this section goes to your internal trial page */}
-      <Link href={trialHref} className="block space-y-2">
-        <p className="font-semibold text-lg">{study.title}</p>
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [locExpanded, setLocExpanded] = useState(false);
 
-        <p className="text-sm text-gray-600">
+  const MAX_DESC = 100; // chars
+  const MAX_LOC = 50;   // chars
+
+  const toggleDesc = () => setDescExpanded(!descExpanded);
+  const toggleLoc = () => setLocExpanded(!locExpanded);
+
+  const truncatedDescription =
+    study.description.length > MAX_DESC && !descExpanded
+      ? study.description.slice(0, MAX_DESC) + '...'
+      : study.description;
+
+  const truncatedLocations =
+    study.locations.join(' • ').length > MAX_LOC && !locExpanded
+      ? study.locations.join(' • ').slice(0, MAX_LOC) + '...'
+      : study.locations.join(' • ');
+
+  return (
+    <div className="card-bordered shadow-sm space-y-2 p-4 border border-secondary rounded-lg">
+      <Link href={trialHref} className="block space-y-2">
+        <p className="font-semibold text-lg text-primary">{study.title}</p>
+
+        <p className="text-sm text-muted">
           Status:{' '}
-          <span
-            className={`font-medium ${priorityStatuses.includes(study.status) ? 'text-green-600' : 'text-slate-800'}`}
-          >
+          <span className={`font-medium ${statusColors[study.status] || 'text-foreground'}`}>
             {study.status.replace(/_/g, ' ')}
           </span>
         </p>
 
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted">
           Start: {study.startDate} | Completion: {study.completionDate}
         </p>
 
         {study.description && (
-          <p className="text-sm text-gray-700">{study.description}</p>
+          <p className="text-sm">
+            {truncatedDescription}{' '}
+            {study.description.length > MAX_DESC && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // prevent Link click
+                  e.preventDefault();  // optional: prevent any default behavior
+                  toggleDesc();
+                }}
+                className="text-primary font-semibold ml-1 hover:underline"
+              >
+                {descExpanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
+          </p>
         )}
 
         {study.locations.length > 0 && (
-          <p className="text-sm text-gray-600">
-            <span className="font-semibold">Locations:</span>{' '}
-            {study.locations.join(' • ')}
+          <p className="text-sm text-muted">
+            <span className="font-semibold">Locations:</span> {truncatedLocations}{' '}
+            {study.locations.join(' • ').length > MAX_LOC && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  toggleLoc();
+                }}
+                className="text-primary font-semibold ml-1 hover:underline"
+              >
+                {locExpanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
           </p>
         )}
       </Link>
 
-      {/* External link button */}
       <a
         href={`https://clinicaltrials.gov/ct2/show/${study.nctId}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-block mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
+        className="btn-secondary text-sm"
       >
         View on ClinicalTrials.gov
       </a>
-    </div >
+    </div>
   );
 };

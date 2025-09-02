@@ -1,6 +1,7 @@
 export interface PatientProfile {
-  uuid: string;
-  name: string;
+  id: string;
+  lastName: string;
+  firstName: string;
   email: string;
   dob: string;
   gender: "male" | "female" | "other";
@@ -9,13 +10,3 @@ export interface PatientProfile {
   conditions: string[];
 }
 
-export interface TrialCard {
-  nctId: string;
-  studyTitle: string;
-  startDate: Date;
-  lastUpdate: Date;
-  status: string;
-  summary: string;
-  locations: string[];
-
-}
