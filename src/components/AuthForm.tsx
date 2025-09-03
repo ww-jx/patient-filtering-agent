@@ -201,7 +201,7 @@ export default function EmailAuthForm({ onSuccess }: Props) {
           {loading ? 'Sending verification code...' : 'Sign In'}
         </button>
         <p className="text-xs text-center text-[var(--color-muted)]">
-          We'll send a verification code to your email
+          We&apos;ll send a verification code to your email
         </p>
       </form>
     );
@@ -328,7 +328,7 @@ export default function EmailAuthForm({ onSuccess }: Props) {
           {loading ? 'Verifying...' : 'Verify Code'}
         </button>
         <p className="text-xs text-center text-[var(--color-muted)]">
-          Didn't receive the code? Check your spam folder or try again
+          Didn&apos;t receive the code? Check your spam folder or try again
         </p>
       </form>
     );
