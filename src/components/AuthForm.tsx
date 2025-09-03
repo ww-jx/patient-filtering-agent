@@ -17,7 +17,7 @@ export default function EmailAuthForm({ onSuccess }: Props) {
   const [statusType, setStatusType] = useState<StatusType>('info');
 
   const [email, setEmail] = useState('');
-  const [isNewUser, setIsNewUser] = useState<boolean | null>(null);
+  const [needsProfile, setNeedsProfile] = useState(false);
 
   // Profile fields
   const [firstName, setFirstName] = useState('');
@@ -45,7 +45,7 @@ export default function EmailAuthForm({ onSuccess }: Props) {
     setStatusType(type);
   };
 
-  // --- Step 1: Email submit ---
+  // --- Step 1: Email submit - Automatically send OTP ---
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return showStatus('Enter your email', 'error');
@@ -53,64 +53,31 @@ export default function EmailAuthForm({ onSuccess }: Props) {
     setStatusMessage(null);
 
     try {
-      const { data: existing, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
-      if (error) throw error;
-
-      const newUser = !existing;
-      setIsNewUser(newUser);
-
-      if (newUser) {
-        showStatus('Email does not exist. Create a new profile?', 'info');
-      } else {
-        showStatus('User found! Send OTP?', 'success');
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error("Error summarising trial:", err.message);
-      } else {
-        console.error("Unexpected error:", err);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // --- Trigger OTP send for existing users ---
-  const handleSendOtp = async () => {
-    if (!email) return;
-    setLoading(true);
-    setStatusMessage(null);
-
-    try {
+      // Send OTP immediately - let Supabase handle user creation
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
+        options: { 
+          emailRedirectTo: window.location.origin, 
+          shouldCreateUser: true // Automatically create user if they don't exist
+        },
       });
       if (otpError) throw otpError;
 
       setStep('otp');
-      showStatus('✅ OTP sent! Check your email.', 'success');
+      showStatus('✅ Verification code sent! Check your email.', 'success');
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof Error) {
-        showStatus(err.message || 'Failed to send OTP', 'error');
+        showStatus(err.message || 'Failed to send verification code', 'error');
       } else {
-        showStatus('Failed to send OTP', 'error');
+        showStatus('Failed to send verification code', 'error');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Proceed to profile creation for new users ---
-  const handleCreateProfileStep = () => {
-    setStep('profile');
-    setStatusMessage(null);
-  };
+
 
   // --- Step 2: Profile submit ---
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -119,8 +86,6 @@ export default function EmailAuthForm({ onSuccess }: Props) {
     setStatusMessage(null);
 
     try {
-      if (!isNewUser) return;
-
       const { data: newProfile, error: insertError } = await supabase
         .from('users')
         .insert([
@@ -139,14 +104,8 @@ export default function EmailAuthForm({ onSuccess }: Props) {
         .single();
       if (insertError) throw insertError;
 
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
-      });
-      if (otpError) throw otpError;
-
-      setStep('otp');
-      showStatus('✅ Profile created! OTP sent to your email.', 'success');
+      showStatus('✅ Profile created! Logging you in...', 'success');
+      setTimeout(() => onSuccess(newProfile as PatientProfile), 1500);
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof Error) {
@@ -162,7 +121,7 @@ export default function EmailAuthForm({ onSuccess }: Props) {
   // --- Step 3: Verify OTP ---
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp || !email) return showStatus('Enter OTP', 'error');
+    if (!otp || !email) return showStatus('Enter verification code', 'error');
     setLoading(true);
     setStatusMessage(null);
 
@@ -174,22 +133,30 @@ export default function EmailAuthForm({ onSuccess }: Props) {
       });
       if (error) throw error;
 
+      // Check if user has a profile in our users table
       const { data: profileData, error: profileError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
         .maybeSingle();
       if (profileError) throw profileError;
-      if (!profileData) return showStatus('Profile not found.', 'error');
 
-      showStatus('✅ OTP verified! Logging in...', 'success');
-      setTimeout(() => onSuccess(profileData as PatientProfile), 2000);
+      if (!profileData) {
+        // New user needs to complete profile
+        setNeedsProfile(true);
+        setStep('profile');
+        showStatus('Welcome! Please complete your profile.', 'info');
+      } else {
+        // Existing user with complete profile
+        showStatus('✅ Verification successful! Logging in...', 'success');
+        setTimeout(() => onSuccess(profileData as PatientProfile), 1500);
+      }
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof Error) {
-        showStatus(err.message || 'Failed to verify OTP', 'error');
+        showStatus(err.message || 'Failed to verify code', 'error');
       } else {
-        showStatus('Failed to verify OTP', 'error');
+        showStatus('Failed to verify code', 'error');
       }
     } finally {
       setLoading(false);
@@ -220,7 +187,7 @@ export default function EmailAuthForm({ onSuccess }: Props) {
         {renderStatus()}
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Enter your email address"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
@@ -231,34 +198,17 @@ export default function EmailAuthForm({ onSuccess }: Props) {
           disabled={loading}
           className="w-full py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)]"
         >
-          {loading ? 'Checking...' : 'Check Email'}
+          {loading ? 'Sending verification code...' : 'Sign In'}
         </button>
-
-        {/* Conditional action buttons */}
-        {isNewUser === true && (
-          <button
-            type="button"
-            onClick={handleCreateProfileStep}
-            className="w-full mt-2 py-2 bg-[var(--color-success)] text-white rounded hover:bg-[var(--color-success-hover)]"
-          >
-            Create New Profile
-          </button>
-        )}
-        {isNewUser === false && (
-          <button
-            type="button"
-            onClick={handleSendOtp}
-            className="w-full mt-2 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)]"
-          >
-            Send OTP
-          </button>
-        )}
+        <p className="text-xs text-center text-[var(--color-muted)]">
+          We'll send a verification code to your email
+        </p>
       </form>
     );
   }
 
   // --- Profile UI ---
-  if (step === 'profile' && isNewUser) {
+  if (step === 'profile' && needsProfile) {
     return (
       <form onSubmit={handleProfileSubmit} className="max-w-md mx-auto p-6 space-y-3">
         {renderStatus()}
@@ -348,7 +298,7 @@ export default function EmailAuthForm({ onSuccess }: Props) {
           disabled={loading}
           className="w-full py-2 bg-[var(--color-success)] text-white rounded hover:bg-[var(--color-success-hover)]"
         >
-          {loading ? 'Sending OTP...' : 'Create Profile & Send OTP'}
+          {loading ? 'Creating profile...' : 'Complete Profile'}
         </button>
       </form>
     );
@@ -359,22 +309,27 @@ export default function EmailAuthForm({ onSuccess }: Props) {
     return (
       <form onSubmit={handleVerifyOtp} className="max-w-md mx-auto p-6 space-y-4">
         {renderStatus()}
-        <p>Enter the 6-digit OTP sent to <strong>{email}</strong>:</p>
+        <p className="text-center">Enter the 6-digit verification code sent to:</p>
+        <p className="text-center font-semibold">{email}</p>
         <input
           type="text"
+          placeholder="Enter 6-digit code"
           value={otp}
           onChange={e => setOtp(e.target.value)}
           maxLength={6}
           required
-          className={inputClass}
+          className={`${inputClass} text-center text-lg tracking-widest`}
         />
         <button
           type="submit"
           disabled={loading}
           className="w-full py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-hover)]"
         >
-          {loading ? 'Verifying OTP...' : 'Verify OTP'}
+          {loading ? 'Verifying...' : 'Verify Code'}
         </button>
+        <p className="text-xs text-center text-[var(--color-muted)]">
+          Didn't receive the code? Check your spam folder or try again
+        </p>
       </form>
     );
   }
