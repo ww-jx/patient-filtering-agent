@@ -51,66 +51,94 @@ export const TrialCard = ({ study, uuid }: TrialCardProps) => {
       : study.locations.join(' • ');
 
   return (
-    <div className="card-bordered shadow-sm space-y-2 p-4 border border-secondary rounded-lg">
-      <Link href={trialHref} className="block space-y-2">
-        <p className="font-semibold text-lg text-primary">{study.title}</p>
-
-        <p className="text-sm text-muted">
-          Status:{' '}
-          <span className={`font-medium ${statusColors[study.status] || 'text-foreground'}`}>
+    <div className="bg-white/95 backdrop-blur-sm border border-white/60 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 sm:p-8 hover:border-primary/20">
+      <Link href={trialHref} className="block space-y-4 sm:space-y-5">
+        {/* Title and Status */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+          <h3 className="font-semibold text-base sm:text-lg text-primary leading-tight flex-1">
+            {study.title}
+          </h3>
+          <span className={`status-badge self-start ${statusColors[study.status] || 'text-foreground'}`}>
             {study.status.replace(/_/g, ' ')}
           </span>
-        </p>
+        </div>
 
-        <p className="text-sm text-muted">
-          Start: {study.startDate} | Completion: {study.completionDate}
-        </p>
+        {/* Timeline */}
+        <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm text-muted">
+          <span className="flex items-center gap-1">
+            <span className="text-brand-500">📅</span>
+            Start: {study.startDate}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="text-medical-500">⏰</span>
+            Completion: {study.completionDate}
+          </span>
+        </div>
 
+        {/* Description */}
         {study.description && (
-          <p className="text-sm">
-            {truncatedDescription}{' '}
-            {study.description.length > MAX_DESC && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation(); // prevent Link click
-                  e.preventDefault();  // optional: prevent any default behavior
-                  toggleDesc();
-                }}
-                className="text-primary font-semibold ml-1 hover:underline"
-              >
-                {descExpanded ? 'Show less' : 'Show more'}
-              </button>
-            )}
-          </p>
+          <div className="text-sm leading-relaxed">
+            <p className="text-foreground">
+              {truncatedDescription}
+              {study.description.length > MAX_DESC && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleDesc();
+                  }}
+                  className="text-primary font-medium ml-1 hover:underline focus:underline focus:outline-none"
+                >
+                  {descExpanded ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </p>
+          </div>
         )}
 
+        {/* Locations */}
         {study.locations.length > 0 && (
-          <p className="text-sm text-muted">
-            <span className="font-semibold">Locations:</span> {truncatedLocations}{' '}
-            {study.locations.join(' • ').length > MAX_LOC && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  toggleLoc();
-                }}
-                className="text-primary font-semibold ml-1 hover:underline"
-              >
-                {locExpanded ? 'Show less' : 'Show more'}
-              </button>
-            )}
-          </p>
+          <div className="text-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-warm-500 mt-0.5">📍</span>
+              <div className="flex-1">
+                <span className="font-medium text-muted">Locations: </span>
+                <span className="text-foreground">
+                  {truncatedLocations}
+                  {study.locations.join(' • ').length > MAX_LOC && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        toggleLoc();
+                      }}
+                      className="text-primary font-medium ml-1 hover:underline focus:underline focus:outline-none"
+                    >
+                      {locExpanded ? 'Show less' : 'Show more'}
+                    </button>
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
         )}
       </Link>
 
-      <a
-        href={`https://clinicaltrials.gov/ct2/show/${study.nctId}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="btn-secondary text-sm"
-      >
-        View on ClinicalTrials.gov
-      </a>
+      {/* Action Button */}
+      <div className="pt-4 sm:pt-5 border-t border-primary/10">
+        <a
+          href={`https://clinicaltrials.gov/ct2/show/${study.nctId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-gradient-to-r from-primary to-secondary text-white text-sm w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span>View on ClinicalTrials.gov</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
     </div>
   );
 };

@@ -7,7 +7,7 @@ interface Location { country?: string; city?: string; }
 
 interface FilterDropdownProps {
   selected: string[];
-  setSelected: (val: string[]) => void;
+  setSelected: React.Dispatch<React.SetStateAction<string[]>>;
   onApply: (locationType?: 'profile' | 'manual', locationValue?: Location | string) => void;
   patientAddress?: { city: string; country: string };
   isPatient?: boolean;
@@ -36,7 +36,11 @@ export const FilterDropdown = ({
   }, []);
 
   const toggleStatus = (status: string) => {
-    setSelected(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]);
+    setSelected((prev: string[]) =>
+      prev.includes(status)
+        ? prev.filter((s: string) => s !== status)
+        : [...prev, status]
+    );
   };
   const handleApply = () => {
     let locationValue: Location | string | undefined;
@@ -56,41 +60,49 @@ export const FilterDropdown = ({
     <div ref={ref} className="relative">
       <button
         onClick={() => setShow(!show)}
-        className="btn-primary border-slate-300 h-8 md:h-10 lg:h-12 rounded-lg p-3 text-slate-700 hover:bg-slate-100 transition flex items-center space-x-1"
+        className="bg-white/90 hover:bg-white border border-white/60 hover:border-primary/30 text-slate-700 hover:text-primary h-12 px-4 rounded-xl flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl font-medium text-sm backdrop-blur-sm hover:scale-[1.02]"
       >
-        <Filter className="h-5 w-5" />
+        <Filter className="h-4 w-4" />
         <span>Filters</span>
 
         {/* Show selected statuses count */}
         {(selected.length > 0 && selected.length < allowedStatuses.length) && (
-          <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full ml-1">
+          <span className="bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold px-2 py-1 rounded-full">
             {selected.length}
           </span>
         )}
 
-
-        <ChevronDown className={`h-4 w-4 transition-transform ${show ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${show ? 'rotate-180' : ''}`} />
       </button>
 
       {show && (
         <div
-          className="absolute z-10 top-full mt-2 w-72 p-4 text-foreground border border-secondary rounded-lg shadow-xl animate-fade-in-down"
-          style={{ backgroundColor: "var(--color-secondary-light)" }}
+          className="absolute z-50 top-full mt-3 w-80 p-6 bg-white/95 backdrop-blur-sm border border-white/60 rounded-2xl shadow-2xl"
+          style={{ animation: 'fadeInDown 0.3s ease-out' }}
         >
           <h3 className="font-semibold text-sm mb-2 text-primary">Overall Status</h3>
           <div className="space-y-2 max-h-40 overflow-y-auto mb-4">
             {allowedStatuses.map(status => {
               const selectedStatus = selected.includes(status);
+              const id = `status-${status}`;
               return (
-                <div key={status} className="flex items-center space-x-2">
+                <div
+                  key={status}
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={() => toggleStatus(status)}
+                >
                   <input
+                    id={id}
                     type="checkbox"
                     checked={selectedStatus}
                     onChange={() => toggleStatus(status)}
                     className={`rounded border-secondary focus:ring-2 focus:ring-primary 
               ${selectedStatus ? 'bg-primary text-background border-primary' : 'bg-background'}`}
                   />
-                  <label className={`text-sm cursor-pointer ${selectedStatus ? 'font-semibold text-primary' : ''}`}>
+                  <label
+                    htmlFor={id}
+                    className={`text-sm cursor-pointer ${selectedStatus ? 'font-semibold text-primary' : ''}`}
+                  >
                     {status.replace(/_/g, ' ')}
                   </label>
                 </div>
@@ -180,10 +192,10 @@ export const FilterDropdown = ({
             </>
           )}
 
-          <div className="mt-4 flex justify-end">
+          <div className="mt-6 flex justify-end">
             <button
               onClick={handleApply}
-              className="bg-secondary text-background px-4 py-2 rounded-lg font-semibold hover:bg-secondary-hover transition-colors text-sm"
+              className="bg-gradient-to-r from-primary to-secondary text-black px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 text-sm hover:scale-105"
             >
               Apply Filters
             </button>

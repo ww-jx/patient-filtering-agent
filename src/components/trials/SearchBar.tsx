@@ -12,27 +12,37 @@ export function SearchBar({
   loading?: boolean;
 }) {
   return (
-    <div className="relative flex-grow">
-      <input
-        type="text"
-        placeholder="Click the icon or press Enter to search"
-        value={keywords}
-        onChange={(e) => setKeywords(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && onSearch()}
-        className="w-full h-8 md:h-10 lg:h-12 border border-muted rounded-lg p-3 pl-10 bg-background text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
-      />
+    <div className="relative w-full max-w-3xl mx-auto">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search by condition, location, or study type"
+          value={keywords}
+          onChange={(e) => setKeywords(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && onSearch()}
+          className="w-full h-14 sm:h-16 border-0 rounded-2xl px-6 pl-14 sm:pl-16 pr-20 bg-white/95 text-slate-800 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-lg backdrop-blur-sm transition-all duration-300 text-base sm:text-lg font-medium hover:bg-white focus:bg-white"
+        />
 
-      <span
-        onClick={() => !loading && onSearch()}
-        className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer text-muted hover:text-primary"
-        title="Press Enter or click to search"
-      >
-        {loading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : (
-          <Search className="h-5 w-5" />
-        )}
-      </span>
+        <div className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+          {loading ? (
+            <Loader2 className="h-6 w-6 sm:h-7 sm:w-7 animate-spin text-primary" />
+          ) : (
+            <Search className="h-6 w-6 sm:h-7 sm:w-7 text-slate-400" />
+          )}
+        </div>
+
+        <button
+          onClick={() => !loading && onSearch()}
+          disabled={loading}
+          className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 text-sm sm:text-base"
+          title="Search for clinical trials"
+        >
+          {loading ? "Searching..." : "Search"}
+        </button>
+      </div>
+      
+      {/* Decorative gradient line */}
+      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-primary via-secondary to-primary rounded-full opacity-60"></div>
     </div>
   );
 }

@@ -1,22 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  /* Dark warm background */
-  --background: #252729;
-  --foreground: #ffffff;
+  /* Light mode color system - bright and welcoming */
+  --background: #ffffff;
+  --foreground: #1e293b;
 
-  /* Giraffe accent colors */
-  --color-primary: #facc15;        /* yellow for headings */
-  --color-primary-hover: #eab308;
-  --color-secondary: #a16207;      /* brown for buttons/borders */
-  --color-secondary-hover: #78350f;
-  --color-success: #22c55e;
-  --color-success-hover: #16a34a;
+  /* Warm, welcoming primary colors */
+  --color-primary: #f59e0b;        /* warm amber for headings */
+  --color-primary-hover: #d97706;
+  --color-primary-light: #fef3c7;
+  --color-secondary: #059669;      /* fresh teal for buttons/borders */
+  --color-secondary-hover: #047857;
+  --color-secondary-light: #d1fae5;
+  
+  /* Extended color palette for marketing design - bright and fresh */
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  
+  --color-medical-50: #eff6ff;
+  --color-medical-100: #dbeafe;
+  --color-medical-200: #bfdbfe;
+  --color-medical-500: #3b82f6;
+  --color-medical-600: #2563eb;
+  --color-medical-700: #1d4ed8;
+  
+  --color-warm-50: #fef7ed;
+  --color-warm-100: #fdedd3;
+  --color-warm-200: #fed7aa;
+  --color-warm-500: #f97316;
+  --color-warm-600: #ea580c;
+  --color-warm-700: #c2410c;
+  
+  /* Status colors - vibrant and clear */
+  --color-success: #10b981;
+  --color-success-hover: #059669;
   --color-danger: #ef4444;
   --color-danger-hover: #dc2626;
-  --color-muted: #9ca3af;
-  --color-muted-hover: #6b7280;
-  --color-secondary-light: #3f2f1a;
+  --color-muted: #64748b;
+  --color-muted-hover: #475569;
+  
+  /* Light mode specific colors */
+  --color-surface: #f8fafc;
+  --color-surface-hover: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  
+  /* Spacing system for better mobile layouts */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
 }
 
 body {
@@ -87,4 +126,165 @@ input::placeholder {
 .btn-primary:hover, .btn-secondary:hover {
   background-color: var(--color-secondary-hover);
   cursor: pointer;
+}
+
+/* Mobile-first responsive design enhancements */
+@media (max-width: 768px) {
+  /* Improved touch targets for mobile */
+  button, a[role="button"], .btn-primary, .btn-secondary {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1.25rem;
+  }
+  
+  /* Better mobile typography */
+  h1 { font-size: 2rem; line-height: 1.2; }
+  h2 { font-size: 1.75rem; line-height: 1.3; }
+  h3 { font-size: 1.5rem; line-height: 1.4; }
+  
+  /* Mobile-optimized spacing */
+  .container-mobile { padding: 1rem; }
+  .section-mobile { padding: 2rem 0; }
+}
+
+/* Marketing design utilities - light mode optimized */
+.bg-aurora {
+  background: linear-gradient(120deg,
+    rgba(16,185,129,.08),
+    rgba(59,130,246,.08),
+    rgba(249,115,22,.08),
+    rgba(245,158,11,.08));
+  background-size: 300% 300%;
+  animation: gradient 14s ease infinite;
+}
+
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.col-grid {
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 16px 16px;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+/* Enhanced focus states for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* Gradient text utility - bright and welcoming */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary), var(--color-medical-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Enhanced shadows for light mode */
+.shadow-xl-soft {
+  box-shadow: 0 20px 50px -20px rgba(0,0,0,.08);
+}
+
+.shadow-brand {
+  box-shadow: 0 10px 25px -5px rgba(16,185,129,.15);
+}
+
+/* Backdrop blur utilities */
+.backdrop-blur-light {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Marketing card styles - bright and clean */
+.marketing-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.marketing-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08);
+  border-color: var(--color-brand-200);
+}
+
+/* Status badge styles - vibrant and clear */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-recruiting {
+  background-color: var(--color-brand-100);
+  color: var(--color-brand-700);
+  border: 1px solid var(--color-brand-200);
+}
+
+.status-enrolling {
+  background-color: var(--color-medical-100);
+  color: var(--color-medical-700);
+  border: 1px solid var(--color-medical-200);
+}
+
+/* Additional light mode utilities */
+.surface {
+  background-color: var(--color-surface);
+}
+
+.surface-hover:hover {
+  background-color: var(--color-surface-hover);
+}
+
+/* Light mode specific gradients */
+.bg-gradient-warm {
+  background: linear-gradient(135deg, var(--color-warm-50), var(--color-brand-50));
+}
+
+.bg-gradient-cool {
+  background: linear-gradient(135deg, var(--color-medical-50), var(--color-brand-50));
 }
