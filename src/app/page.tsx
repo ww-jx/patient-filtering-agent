@@ -22,6 +22,8 @@ export default function HomePage() {
     setProfile(profile);
     setOtpVerified(true);
     localStorage.setItem('patientProfile', JSON.stringify(profile));
+    // Scroll to top for smooth transition to PatientHome
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {

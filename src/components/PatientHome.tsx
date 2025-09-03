@@ -55,6 +55,11 @@ export default function PatientHome({ profile }: Props) {
   const { studies, nextPageToken, loading, sortOrder, fetchStudies, toggleSortOrder } =
     useTrialsSearch();
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   // Rotate through query sets every 8 seconds
   useEffect(() => {
     const interval = setInterval(() => {
