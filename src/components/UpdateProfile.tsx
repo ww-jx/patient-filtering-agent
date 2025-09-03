@@ -17,7 +17,10 @@ export function UpdateProfile({ profile, onUpdate }: Props) {
     setForm(profile);
   }, [profile]);
 
-  const handleChange = (key: keyof PatientProfile, value: any) => {
+  const handleChange = <K extends keyof PatientProfile>(
+    key: K,
+    value: PatientProfile[K]
+  ) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
@@ -54,9 +57,13 @@ export function UpdateProfile({ profile, onUpdate }: Props) {
       onUpdate?.(data.user);
 
       alert('Profile updated successfully!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message || 'An error occurred');
+      if (err instanceof Error) {
+        alert(err.message || 'An error occurred');
+      } else {
+        alert('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -114,7 +121,7 @@ export function UpdateProfile({ profile, onUpdate }: Props) {
           <label className="text-sm text-muted mb-1">Gender</label>
           <select
             value={form.gender}
-            onChange={e => handleChange('gender', e.target.value)}
+            onChange={e => handleChange("gender", e.target.value as PatientProfile["gender"])}
             className="border border-muted rounded px-3 py-2 w-full bg-background text-foreground placeholder:text-muted"
           >
             <option value="male">Male</option>

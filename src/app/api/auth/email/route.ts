@@ -9,7 +9,9 @@ const supabase = createClient(
 export async function POST(req: Request) {
   const { email, profile } = await req.json();
 
-  if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+  if (!email) {
+    return NextResponse.json({ error: "Email required" }, { status: 400 });
+  }
 
   try {
     // check if user exists
@@ -26,10 +28,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ needsProfile: !existingUser });
-  } catch (err: any) {
-    console.error(err);
+  } catch (err: unknown) {
+    console.error("Error handling email auth:", err);
+    // Always return a response on error
     return NextResponse.json(
-      { error: err.message || "Internal server error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildCtgQuery } from "@/lib/buildCtgQuery";
 
+
+interface StudyApiResponse {
+  protocolSection: {
+    identificationModule: { nctId: string; briefTitle: string };
+    statusModule: { overallStatus: string; startDateStruct?: { date: string }; completionDateStruct?: { date: string } };
+    descriptionModule: { briefSummary?: string };
+    contactsLocationsModule?: {
+      locations?: { city?: string; state?: string; country?: string }[];
+    };
+  };
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const keywords = searchParams.get("keywords") || "";
@@ -62,9 +74,9 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json();
 
-    const studies = (data.studies || []).map((s: any) => {
+    const studies = (data.studies || []).map((s: StudyApiResponse) => {
       const locations =
-        s.protocolSection.contactsLocationsModule?.locations?.map((loc: any) =>
+        s.protocolSection.contactsLocationsModule?.locations?.map((loc) =>
           [loc.city, loc.state, loc.country].filter(Boolean).join(", ")
         ).filter(Boolean) || [];
 

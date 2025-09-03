@@ -76,7 +76,7 @@ export default function PatientHome({ profile }: Props) {
       <section className="relative z-10 overflow-visible">
         <div className="absolute inset-0 bg-aurora animate-gradient opacity-40"></div>
         <div className="absolute inset-0 col-grid text-slate-400"></div>
-        
+
         <div className="relative">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
             <div className="text-center mb-8 sm:mb-12">
@@ -84,7 +84,7 @@ export default function PatientHome({ profile }: Props) {
                 Welcome, {profile.firstName} 👋
               </h1>
               <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                Describe what you are looking for, we'll handle the rest for you.
+                Describe what you are looking for, we&apos;ll handle the rest for you.
               </p>
             </div>
 
@@ -138,17 +138,16 @@ export default function PatientHome({ profile }: Props) {
                         {demoQueriesSets.map((_, index) => (
                           <div
                             key={index}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                              index === currentQuerySetIndex 
-                                ? 'bg-primary' 
-                                : 'bg-primary/30'
-                            }`}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentQuerySetIndex
+                              ? 'bg-primary'
+                              : 'bg-primary/30'
+                              }`}
                           />
                         ))}
                       </div>
                     </div>
-                    <DemoQueries 
-                      queries={currentDemoQueries} 
+                    <DemoQueries
+                      queries={currentDemoQueries}
                       setKeywords={setKeywords}
                       key={currentQuerySetIndex} // Force re-render for animation
                     />
@@ -183,15 +182,15 @@ export default function PatientHome({ profile }: Props) {
           {/* Trial Cards Grid - Enhanced with staggered animation */}
           <div className="grid gap-4 sm:gap-6 max-w-4xl mx-auto">
             {studies.map((study, index) => (
-              <div 
-                key={study.nctId} 
+              <div
+                key={study.nctId}
                 className="w-full transform transition-all duration-300 hover:scale-[1.02]"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="relative">
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-secondary/20 to-medical-500/20 rounded-2xl blur opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative bg-white/90 backdrop-blur-sm border border-white/60 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-                    <TrialCard study={{...study, locations: study.locations || []}} uuid={profile.id} />
+                    <TrialCard study={{ ...study, locations: study.locations || [] }} uuid={profile.id} />
                   </div>
                 </div>
               </div>
@@ -235,13 +234,13 @@ export default function PatientHome({ profile }: Props) {
           )}
         </div>
       </section>
-      
+
       {/* Floating elements for visual interest */}
       <div className="fixed bottom-8 right-8 pointer-events-none z-10">
         <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full blur-xl animate-pulse"></div>
       </div>
       <div className="fixed top-1/4 left-8 pointer-events-none z-10">
-        <div className="w-8 h-8 bg-gradient-to-br from-medical-500/20 to-primary/20 rounded-full blur-lg animate-bounce" style={{animationDelay: '2s'}}></div>
+        <div className="w-8 h-8 bg-gradient-to-br from-medical-500/20 to-primary/20 rounded-full blur-lg animate-bounce" style={{ animationDelay: '2s' }}></div>
       </div>
     </div>
   );

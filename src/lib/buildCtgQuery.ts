@@ -206,7 +206,7 @@ export async function handleApiSpecUpload(formData: FormData): Promise<{
   message?: string;
   fileName?: string;
   extractedLength?: number;
-  cacheStats?: any;
+  cacheStats?: ReturnType<typeof getCacheInfo>;
   error?: string;
 }> {
   try {
@@ -256,7 +256,7 @@ export async function handleBuildQuery(
   success: boolean;
   input?: CtgQueryInput;
   queryParams?: Record<string, string>;
-  cacheStats?: any;
+  cacheStats?: ReturnType<typeof getCacheInfo>;
   error?: string;
 }> {
   try {
@@ -322,8 +322,9 @@ export async function handleBuildQuery(
 }
 
 // Export everything for backward compatibility
-export {
-  buildCtgQuery as default,
+export { buildCtgQuery as default };
+
+export type {
   CtgQueryInput,
   CtgQueryOutput,
   BuildCtgQueryOptions

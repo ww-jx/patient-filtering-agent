@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -6,18 +6,44 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
-  try {
-    if (!id) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+interface User {
+  id: string;
+  email: string;
+  dob?: string;
+  country?: string;
+  city?: string;
+  gender?: string;
+  firstName?: string;
+  lastName?: string;
+  conditions?: string[];
+}
 
+// Use the Next.js expected type for context.params
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function GET(
+  req: NextRequest,
+  context: RouteContext
+): Promise<NextResponse> {
+  // Await the params promise
+  const { id } = await context.params;
+
+  if (!id) {
+    return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+  }
+
+  try {
     const { data: user, error } = await supabase
       .from("users")
-      .select("id, email, dob, country, city, gender, firstName, lastName, conditions")
+      .select("*")
       .eq("id", id)
       .single();
 
-    if (error || !user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (error || !user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ user });
   } catch (err) {
@@ -26,24 +52,31 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function PUT(
+  req: NextRequest,
+  context: RouteContext
+): Promise<NextResponse> {
+  const { id } = await context.params;
+
+  if (!id) {
+    return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+  }
+
   try {
-    if (!id) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
-
     const body = await req.json();
-
-    // Validate body fields if needed
-    const { email, dob, country, city, gender, firstName, lastName, conditions } = body;
+    const { email, dob, country, city, gender, firstName, lastName, conditions } =
+      body;
 
     const { data, error } = await supabase
       .from("users")
       .update({ email, dob, country, city, gender, firstName, lastName, conditions })
       .eq("id", id)
       .select()
-      .single(); // Return the updated row
+      .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json({ user: data });
   } catch (err) {

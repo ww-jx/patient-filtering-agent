@@ -74,6 +74,16 @@ class FileCache {
     }
   }
 
+  public cleanupOlderThan(cutoffTime: number) {
+    for (const [key, value] of this.cache) {
+      if (value.timestamp < cutoffTime) {
+        this.cache.delete(key);
+        console.log(`Removed old cache entry: ${key}`);
+      }
+    }
+    this.saveToDisk();
+  }
+
   stats() {
     return {
       entries: this.cache.size,
@@ -217,7 +227,7 @@ export async function openRouterChat(
   options?: OpenRouterChatOptions
 ) {
   const response = await openai.chat.completions.create({
-    model: process.env.OPENROUTER_MODEL,
+    model: process.env.OPENROUTER_MODEL!,
     messages: [
       { role: "system", content: "You are a helpful assistant." },
       { role: "user", content: prompt },
@@ -252,14 +262,6 @@ export function clearFileCache() {
 
 // Clean up old cache entries
 export function cleanupOldFileCache(maxAgeHours: number = 24): void {
-  const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000);
-
-  for (const [key, value] of fileCache.cache) {
-    if (value.timestamp < cutoffTime) {
-      fileCache.cache.delete(key);
-      console.log(`Removed old cache entry: ${key}`);
-    }
-  }
-
-  fileCache.saveToDisk();
+  const cutoffTime = Date.now() - maxAgeHours * 60 * 60 * 1000;
+  fileCache.cleanupOlderThan(cutoffTime);
 }

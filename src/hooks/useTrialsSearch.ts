@@ -10,6 +10,12 @@ interface Study {
   locations?: string[];
 }
 
+interface SearchTrialsResponse {
+  studies: Study[];
+  nextPageToken?: string | null;
+  prevParams?: string | null;
+}
+
 export const useTrialsSearch = () => {
   const [studies, setStudies] = useState<Study[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
@@ -51,7 +57,7 @@ export const useTrialsSearch = () => {
       }
 
       const res = await fetch(url.toString());
-      const data = await res.json();
+      const data: SearchTrialsResponse = await res.json();
 
       const filtered = (data.studies || []).filter(s =>
         selectedStatuses.length === 0 || selectedStatuses.includes(s.status)

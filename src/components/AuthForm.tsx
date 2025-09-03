@@ -68,9 +68,12 @@ export default function EmailAuthForm({ onSuccess }: Props) {
       } else {
         showStatus('User found! Send OTP?', 'success');
       }
-    } catch (err: any) {
-      console.error(err);
-      showStatus(err.message || 'Something went wrong', 'error');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Error summarising trial:", err.message);
+      } else {
+        console.error("Unexpected error:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -85,16 +88,19 @@ export default function EmailAuthForm({ onSuccess }: Props) {
     try {
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin },
-        shouldCreateUser: false,
+        options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
       });
       if (otpError) throw otpError;
 
       setStep('otp');
       showStatus('✅ OTP sent! Check your email.', 'success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showStatus(err.message || 'Failed to send OTP', 'error');
+      if (err instanceof Error) {
+        showStatus(err.message || 'Failed to send OTP', 'error');
+      } else {
+        showStatus('Failed to send OTP', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -135,16 +141,19 @@ export default function EmailAuthForm({ onSuccess }: Props) {
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin },
-        shouldCreateUser: false,
+        options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
       });
       if (otpError) throw otpError;
 
       setStep('otp');
       showStatus('✅ Profile created! OTP sent to your email.', 'success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showStatus(err.message || 'Something went wrong', 'error');
+      if (err instanceof Error) {
+        showStatus(err.message || 'Something went wrong', 'error');
+      } else {
+        showStatus('Something went wrong', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -175,9 +184,13 @@ export default function EmailAuthForm({ onSuccess }: Props) {
 
       showStatus('✅ OTP verified! Logging in...', 'success');
       setTimeout(() => onSuccess(profileData as PatientProfile), 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showStatus(err.message || 'Failed to verify OTP', 'error');
+      if (err instanceof Error) {
+        showStatus(err.message || 'Failed to verify OTP', 'error');
+      } else {
+        showStatus('Failed to verify OTP', 'error');
+      }
     } finally {
       setLoading(false);
     }

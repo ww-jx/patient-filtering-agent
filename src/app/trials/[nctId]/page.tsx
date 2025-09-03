@@ -117,8 +117,8 @@ export default function TrialPage() {
 
   useEffect(() => {
     if (!study) return;
-    const brief = protocolSection.descriptionModule.briefSummary || '';
-    const detailed = protocolSection.descriptionModule.detailedSummary || '';
+    const brief = study.protocolSection.descriptionModule.briefSummary || '';
+    const detailed = study.protocolSection.descriptionModule.detailedSummary || '';
     const combined = [brief, detailed].filter(Boolean).join('\n\n');
     setOriginalSummary(combined);
   }, [study]);
