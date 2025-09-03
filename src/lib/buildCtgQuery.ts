@@ -1,7 +1,10 @@
-import { openRouterChat } from "./openRouter";
-import fs from "fs";
-import path from "path";
-import yaml from "js-yaml";
+import {
+  openRouterChat,
+  uploadFile,
+  processFile,
+  getFileCacheStats,
+  clearFileCache
+} from "./openRouter";
 
 interface CtgQueryInput {
   keywords: string;
@@ -13,24 +16,83 @@ interface CtgQueryOutput {
   queryParams: Record<string, string>;
 }
 
-export async function buildCtgQuery(input: CtgQueryInput): Promise<CtgQueryOutput> {
-  const { keywords, statuses, location } = input;
+interface BuildCtgQueryOptions {
+  apiSpecFile?: string;          // Path to API spec file
+  apiSpecBuffer?: Buffer;        // Buffer of uploaded API spec
+  apiSpecFileName?: string;      // Name of uploaded API spec file
+  useCache?: boolean;           // Whether to use cached API spec (default: true)
+}
 
-  // Load OpenAPI spec as string (YAML or JSON)
-  let openApiContent = "";
-  const openApiFilePath = process.env.CT_OPENAPI_FILE;
-  if (openApiFilePath) {
-    const absPath = path.resolve(openApiFilePath);
-    const rawContent = fs.readFileSync(absPath, "utf-8");
-    if (openApiFilePath.endsWith(".yaml") || openApiFilePath.endsWith(".yml")) {
-      const parsed = yaml.load(rawContent);
-      openApiContent = JSON.stringify(parsed, null, 2);
-    } else {
-      openApiContent = rawContent;
-    }
-  }
+// Fallback minimal API info if no spec provided
+function getMinimalApiInfo(): string {
+  return `
+ClinicalTrials.gov API Essential Parameters:
+
+Required:
+- query.term (string): Main search keywords
+
+Optional Query:
+- query.locn (string): Location search terms
+- query.cond (string): Condition/disease search
+
+Filters:
+- filter.overallStatus (string): Comma-separated list of statuses
+  Valid: RECRUITING, NOT_YET_RECRUITING, ENROLLING_BY_INVITATION, 
+         ACTIVE_NOT_RECRUITING, COMPLETED, SUSPENDED, TERMINATED, 
+         WITHDRAWN, AVAILABLE, APPROVED_FOR_MARKETING, UNKNOWN
+
+Settings:
+- pageSize (number): Results per page (default: 10, max: 1000)
+- countTotal (boolean): Include total count (default: false)
+- format (string): Response format (json or csv, default: json)
+
+Rules:
+- Use comma-separated values for arrays
+- Set reasonable defaults for pagination
+`;
+}
+
+export async function buildCtgQuery(
+  input: CtgQueryInput,
+  options: BuildCtgQueryOptions = {}
+): Promise<CtgQueryOutput> {
+  const { keywords, statuses, location } = input;
+  const {
+    apiSpecFile,
+    apiSpecBuffer,
+    apiSpecFileName,
+    useCache = true
+  } = options;
 
   console.log("Building CTG Query with input:", input);
+
+  let apiInfo: string;
+
+  try {
+    if (apiSpecBuffer && apiSpecFileName) {
+      // Upload and process buffer
+      console.log(`Processing uploaded file: ${apiSpecFileName}`);
+      apiInfo = await uploadFile(apiSpecBuffer, apiSpecFileName);
+    } else if (apiSpecFile) {
+      // Process file from path
+      console.log(`Processing file: ${apiSpecFile}`);
+      apiInfo = await processFile(apiSpecFile);
+    } else {
+      // Try environment variable (backward compatibility)
+      const envPath = process.env.CT_OPENAPI_FILE;
+      if (envPath) {
+        console.log(`Processing file from env var: ${envPath}`);
+        apiInfo = await processFile(envPath);
+      } else {
+        // Use minimal built-in API info
+        console.log('Using minimal built-in API info');
+        apiInfo = getMinimalApiInfo();
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to process API spec file, using minimal info:', error);
+    apiInfo = getMinimalApiInfo();
+  }
 
   // Structured JSON object output
   const structuredOutput = {
@@ -39,268 +101,33 @@ export async function buildCtgQuery(input: CtgQueryInput): Promise<CtgQueryOutpu
       type: "object",
       properties: {
         "query.term": { type: "string" },
-        "filter.overallStatus": { type: "string" },
         "query.locn": { type: "string" },
+        "pageSize": { type: "number" },
+        "countTotal": { type: "boolean" }
       },
       required: ["query.term"],
       additionalProperties: false,
     },
   };
 
-  const prompt = `
-You are a ClinicalTrials.gov query builder.
-- The user is looking for: ${keywords}
-- Filter by statuses: "${statuses?.join(", ") || "ACTIVE_NOT_RECRUITING, ENROLLING_BY_INVITATION, NOT_YET_RECRUITING, RECRUITING, AVAILABLE, APPROVED_FOR_MARKETING, UNKNOWN"}"
-- In location: "${location || "none"}"
+  const prompt = `Build ClinicalTrials.gov API query parameters.
 
-API Specification:
-\`\`\`
-${openApiContent}
+Input:
+- Keywords: ${keywords}
+- Location: ${location || "none"}
 
-
-
-format
-enum
-		
-Default: json
-Allowed: csv ┃ json
-	
-
-Must be one of the following:
-
-    csv- return CSV table with one page of study data; first page will contain header with column names; available fields are listed on CSV Download page
-    json- return JSON with one page of study data; every study object is placed in a separate line; markup type fields format depends on markupFormat parameter
-
-markupFormat
-enum
-		
-Default: markdown
-Allowed: markdown ┃ legacy
-	
-
-Format of markup type fields:
-
-    markdown- markdown format
-    legacy- compatible with classic PRS
-
-Applicable only to json format.
-query.cond
-string
-		
-	
-
-"Conditions or disease" query in Essie expression syntax. See "ConditionSearch Area" on Search Areas for more details.
-Examples: lung cancer ┃ (head OR neck) AND pain
-query.term
-string
-		
-	
-
-"Other terms" query in Essie expression syntax. See "BasicSearch Area" on Search Areas for more details.
-Examples: AREA[LastUpdatePostDate]RANGE[2023-01-15,MAX]
-query.locn
-string
-		
-	
-
-"Location terms" query in Essie expression syntax. See "LocationSearch Area" on Search Areas for more details.
-query.titles
-string
-		
-	
-
-"Title / acronym" query in Essie expression syntax. See "TitleSearch Area" on Search Areas for more details.
-query.intr
-string
-		
-	
-
-"Intervention / treatment" query in Essie expression syntax. See "InterventionSearch Area" on Search Areas for more details.
-query.outc
-string
-		
-	
-
-"Outcome measure" query in Essie expression syntax. See "OutcomeSearch Area" on Search Areas for more details.
-query.spons
-string
-		
-	
-
-"Sponsor / collaborator" query in Essie expression syntax. See "SponsorSearch Area" on Search Areas for more details.
-query.lead
-string
-		
-	
-
-Searches in "LeadSponsorName" field. See Study Data Structure for more details. The query is in Essie expression syntax.
-query.id
-string
-		
-	
-
-"Study IDs" query in Essie expression syntax. See "IdSearch Area" on Search Areas for more details.
-query.patient
-string
-		
-	
-
-See "PatientSearch Area" on Search Areas for more details.
-filter.overallStatus
-array of string
-		
-Allowed: ACTIVE_NOT_RECRUITING ┃ COMPLETED ┃ ENROLLING_BY_INVITATION ┃ NOT_YET_RECRUITING ┃ RECRUITING ┃ SUSPENDED ┃ TERMINATED ┃ WITHDRAWN ┃ AVAILABLE ┃ NO_LONGER_AVAILABLE ┃ TEMPORARILY_NOT_AVAILABLE ┃ APPROVED_FOR_MARKETING ┃ WITHHELD ┃ UNKNOWN
-	
-
-Filter by comma- or pipe-separated list of statuses
-Examples: [ NOT_YET_RECRUITING, RECRUITING ] ┃ [ COMPLETED ]
-filter.geo
-string
-		
-Pattern: ^distance\(-?\d+(\.\d+)?,-?\d+(\.\d+)?,\d+(\.\d+)?(km|mi)?\)$
-	
-
-Filter by geo-function. Currently only distance function is supported. Format: distance(latitude,longitude,distance)
-Examples: distance(39.0035707,-77.1013313,50mi)
-filter.ids
-array of string
-		
-	
-
-Filter by comma- or pipe-separated list of NCT IDs (a.k.a. ClinicalTrials.gov identifiers). The provided IDs will be searched in NCTId and NCTIdAlias fields.
-Examples: [ NCT04852770, NCT01728545, NCT02109302 ]
-filter.advanced
-string
-		
-	
-
-Filter by query in Essie expression syntax
-Examples: AREA[StartDate]2022 ┃ AREA[MinimumAge]RANGE[MIN, 16 years] AND AREA[MaximumAge]RANGE[16 years, MAX]
-filter.synonyms
-array of string
-		
-	
-
-Filter by comma- or pipe-separated list of area:synonym_id pairs
-Examples: [ ConditionSearch:1651367, BasicSearch:2013558 ]
-postFilter.overallStatus
-array of string
-		
-Allowed: ACTIVE_NOT_RECRUITING ┃ COMPLETED ┃ ENROLLING_BY_INVITATION ┃ NOT_YET_RECRUITING ┃ RECRUITING ┃ SUSPENDED ┃ TERMINATED ┃ WITHDRAWN ┃ AVAILABLE ┃ NO_LONGER_AVAILABLE ┃ TEMPORARILY_NOT_AVAILABLE ┃ APPROVED_FOR_MARKETING ┃ WITHHELD ┃ UNKNOWN
-	
-
-Filter by comma- or pipe-separated list of statuses
-Examples: [ NOT_YET_RECRUITING, RECRUITING ] ┃ [ COMPLETED ]
-postFilter.geo
-string
-		
-Pattern: ^distance\(-?\d+(\.\d+)?,-?\d+(\.\d+)?,\d+(\.\d+)?(km|mi)?\)$
-	
-
-Filter by geo-function. Currently only distance function is supported. Format: distance(latitude,longitude,distance)
-Examples: distance(39.0035707,-77.1013313,50mi)
-postFilter.ids
-array of string
-		
-	
-
-Filter by comma- or pipe-separated list of NCT IDs (a.k.a. ClinicalTrials.gov identifiers). The provided IDs will be searched in NCTId and NCTIdAlias fields.
-Examples: [ NCT04852770, NCT01728545, NCT02109302 ]
-postFilter.advanced
-string
-		
-	
-
-Filter by query in Essie expression syntax
-Examples: AREA[StartDate]2022 ┃ AREA[MinimumAge]RANGE[MIN, 16 years] AND AREA[MaximumAge]RANGE[16 years, MAX]
-postFilter.synonyms
-array of string
-		
-	
-
-Filter by comma- or pipe-separated list of area:synonym_id pairs
-Examples: [ ConditionSearch:1651367, BasicSearch:2013558 ]
-aggFilters
-string
-		
-	
-
-Apply aggregation filters, aggregation counts will not be provided. The value is comma- or pipe-separated list of pairs filter_id:space-separated list of option keys for the checked options.
-Examples: results:with,status:com ┃ status:not rec,sex:f,healthy:y
-geoDecay
-string
-		
-Default: func:exp,scale:300mi,offset:0mi,decay:0.5
-Pattern: ^func:(gauss|exp|linear),scale:(\d+(\.\d+)?(km|mi)),offset:(\d+(\.\d+)?(km|mi)),decay:(\d+(\.\d+)?)$
-	
-
-Set proximity factor by distance from filter.geo location to the closest LocationGeoPoint of a study. Ignored, if filter.geo parameter is not set or response contains more than 10,000 studies.
-Examples: func:linear,scale:100km,offset:10km,decay:0.1 ┃ func:gauss,scale:500mi,offset:0mi,decay:0.3
-fields
-array of string
-		
-Min 1 item
-	
-
-If specified, must be non-empty comma- or pipe-separated list of fields to return. If unspecified, all fields will be returned. Order of the fields does not matter.
-
-For csv format, specify list of columns. The column names are available on CSV Download.
-
-For json format, every list item is either area name, piece name, field name, or special name. If a piece or a field is a branch node, all descendant fields will be included. All area names are available on Search Areas, the piece and field names — on Data Structure and also can be retrieved at /studies/metadata endpoint. There is a special name, @query, which expands to all fields queried by search.
-Examples: [ NCTId, BriefTitle, OverallStatus, HasResults ] ┃ [ ProtocolSection ]
-sort
-array of string
-		
-Max 2 items
-	
-
-Comma- or pipe-separated list of sorting options of the studies. The returning studies are not sorted by default for a performance reason. Every list item contains a field/piece name and an optional sort direction (asc for ascending or desc for descending) after colon character.
-
-All piece and field names can be found on Data Structure and also can be retrieved at /studies/metadata endpoint. Currently, only date and numeric fields are allowed for sorting. There is a special "field" @relevance to sort by relevance to a search query.
-
-Studies missing sort field are always last. Default sort direction:
-
-    Date field - desc
-    Numeric field - asc
-    @relevance - desc
-
-Examples: [ @relevance ] ┃ [ LastUpdatePostDate ] ┃ [ EnrollmentCount:desc, NumArmGroups ]
-countTotal
-boolean
-		
-Default: false
-	
-
-Count total number of studies in all pages and return totalCount field with first page, if true. For CSV, the result can be found in x-total-count response header. The parameter is ignored for the subsequent pages.
-pageSize
-int32
-		
-Default: 10
-Min 0
-	
-
-Page size is maximum number of studies to return in response. It does not have to be the same for every page. If not specified or set to 0, the default value will be used. It will be coerced down to 1,000, if greater than that.
-Examples: 2 ┃ 100
-pageToken
-string
-		
-	
-
-Token to get next page. Set it to a nextPageToken value returned with the previous page in JSON format. For CSV, it can be found in x-next-page-token response header. Do not specify it for first page.
-API Server
-https://clinicaltrials.gov/api/v2
-\`\`\`
+API Reference:
+${apiInfo}
 
 Instructions:
-1. Use the API specification above to understand valid query parameters.
-2. Output a JSON object that maps query parameter names to values, following the API spec.
-3. Output only JSON, no extra text.
+1. Use query.term for the main keywords
+3. Use query.locn for location if provided
+4. Set pageSize to 10
+5. Set countTotal to true
+6. Only include parameters that have values
+7. Ensure status values are valid from the API spec
 
-Rules:
-- Only retrieve trials where  completionDateStruct have not passed today's date ${new Date}.
-- only return 10 entries per page
-
-`;
+Return JSON object with parameter names as keys and their values.`;
 
   // Call OpenRouter
   const response = await openRouterChat(prompt, { structuredOutput });
@@ -309,3 +136,195 @@ Rules:
 
   return { queryParams: response };
 }
+
+// Convenience function for uploading API spec and building query
+export async function buildCtgQueryWithUpload(
+  input: CtgQueryInput,
+  apiSpecBuffer: Buffer,
+  apiSpecFileName: string
+): Promise<CtgQueryOutput> {
+  return buildCtgQuery(input, {
+    apiSpecBuffer,
+    apiSpecFileName
+  });
+}
+
+// Convenience function for file path
+export async function buildCtgQueryWithFile(
+  input: CtgQueryInput,
+  apiSpecFile: string
+): Promise<CtgQueryOutput> {
+  return buildCtgQuery(input, {
+    apiSpecFile
+  });
+}
+
+// Batch processing with shared API spec
+export async function buildCtgQueriesBatch(
+  inputs: CtgQueryInput[],
+  options: BuildCtgQueryOptions = {}
+): Promise<CtgQueryOutput[]> {
+  const results: CtgQueryOutput[] = [];
+
+  // Process API spec once (will be cached for subsequent calls)
+  if (options.apiSpecBuffer && options.apiSpecFileName) {
+    await uploadFile(options.apiSpecBuffer, options.apiSpecFileName);
+  } else if (options.apiSpecFile) {
+    await processFile(options.apiSpecFile);
+  }
+
+  // Build all queries (will use cached API spec)
+  for (const input of inputs) {
+    try {
+      const result = await buildCtgQuery(input, { useCache: true });
+      results.push(result);
+    } catch (error) {
+      console.error('Failed to build query for input:', input, error);
+      // Continue with other queries
+    }
+  }
+
+  return results;
+}
+
+// Utility functions
+export function getCacheInfo() {
+  return {
+    fileCache: getFileCacheStats(),
+    timestamp: new Date().toISOString()
+  };
+}
+
+export function clearAllCaches() {
+  clearFileCache();
+  console.log('All caches cleared');
+}
+
+// Next.js App Router utility functions for handling file uploads
+export async function handleApiSpecUpload(formData: FormData): Promise<{
+  success: boolean;
+  message?: string;
+  fileName?: string;
+  extractedLength?: number;
+  cacheStats?: any;
+  error?: string;
+}> {
+  try {
+    const file = formData.get('apiSpec') as File;
+
+    if (!file) {
+      return { success: false, error: 'No file uploaded' };
+    }
+
+    // Validate file type
+    if (!file.name.match(/\.(yaml|yml|json)$/)) {
+      return { success: false, error: 'Only YAML and JSON files are allowed' };
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      return { success: false, error: 'File size exceeds 10MB limit' };
+    }
+
+    console.log(`Received upload: ${file.name}, size: ${file.size} bytes`);
+
+    // Convert File to Buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const extractedInfo = await uploadFile(buffer, file.name);
+
+    return {
+      success: true,
+      message: `API spec ${file.name} processed and cached`,
+      fileName: file.name,
+      extractedLength: extractedInfo.length,
+      cacheStats: getCacheInfo()
+    };
+  } catch (error) {
+    console.error('Upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+export async function handleBuildQuery(
+  formData: FormData | { keywords: string; statuses?: string[]; location?: string; }
+): Promise<{
+  success: boolean;
+  input?: CtgQueryInput;
+  queryParams?: Record<string, string>;
+  cacheStats?: any;
+  error?: string;
+}> {
+  try {
+    let keywords: string;
+    let statuses: string[] | undefined;
+    let location: string | undefined;
+    let apiSpecFile: File | null = null;
+
+    if (formData instanceof FormData) {
+      // Handle FormData from Next.js request
+      keywords = formData.get('keywords') as string;
+      const statusesStr = formData.get('statuses') as string;
+      location = (formData.get('location') as string) || undefined;
+      apiSpecFile = formData.get('apiSpec') as File;
+
+      statuses = statusesStr ?
+        (statusesStr.includes(',') ? statusesStr.split(',').map(s => s.trim()) : [statusesStr]) :
+        undefined;
+    } else {
+      // Handle JSON object
+      ({ keywords, statuses, location } = formData);
+    }
+
+    if (!keywords) {
+      return { success: false, error: 'Keywords are required' };
+    }
+
+    const input: CtgQueryInput = {
+      keywords,
+      statuses,
+      location
+    };
+
+    const options: BuildCtgQueryOptions = {};
+
+    // If file uploaded with this request, use it
+    if (apiSpecFile && apiSpecFile.size > 0) {
+      if (!apiSpecFile.name.match(/\.(yaml|yml|json)$/)) {
+        return { success: false, error: 'Only YAML and JSON files are allowed for API spec' };
+      }
+
+      const arrayBuffer = await apiSpecFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      options.apiSpecBuffer = buffer;
+      options.apiSpecFileName = apiSpecFile.name;
+    }
+
+    const result = await buildCtgQuery(input, options);
+
+    return {
+      success: true,
+      input,
+      queryParams: result.queryParams,
+      cacheStats: getCacheInfo()
+    };
+  } catch (error) {
+    console.error('Query build error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// Export everything for backward compatibility
+export {
+  buildCtgQuery as default,
+  CtgQueryInput,
+  CtgQueryOutput,
+  BuildCtgQueryOptions
+};

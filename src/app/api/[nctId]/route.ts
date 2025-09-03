@@ -26,6 +26,10 @@ export async function GET(
             fullName: data.protocolSection?.identificationModule?.organization?.fullName || '',
           },
         },
+        descriptionModule: {
+          briefSummary: data.protocolSection?.descriptionModule?.briefSummary || '',
+          detailedDescription: data.protocolSection?.descriptionModule?.detailedDescription || '',
+        },
         statusModule: {
           overallStatus: data.protocolSection?.statusModule?.overallStatus || '',
           startDate: data.protocolSection?.statusModule?.startDateStruct?.date || '',

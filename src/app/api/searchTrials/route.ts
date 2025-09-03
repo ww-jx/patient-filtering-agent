@@ -4,7 +4,15 @@ import { buildCtgQuery } from "@/lib/buildCtgQuery";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const keywords = searchParams.get("keywords") || "";
-  const statuses = searchParams.get("statuses")?.split(",") || [];
+  const statuses = searchParams.get("statuses")?.split(",") || [
+    "ACTIVE_NOT_RECRUITING",
+    "ENROLLING_BY_INVITATION",
+    "NOT_YET_RECRUITING",
+    "RECRUITING",
+    "AVAILABLE",
+    "APPROVED_FOR_MARKETING",
+    "UNKNOWN",
+  ];
   const location = searchParams.get("location") || "";
   const pageToken = searchParams.get("pageToken") || "";
   const prevParamsRaw = searchParams.get("prevParams"); // base search params only
@@ -17,6 +25,8 @@ export async function GET(req: NextRequest) {
   let queryParams: Record<string, string> = {
     format: "json",
     pageSize: "10",
+    "filter.overallStatus": statuses.join("|"), // default statuses
+    "filter.advanced": `AREA[CompletionDate]RANGE[${new Date().toISOString().split("T")[0]},MAX]`, // not ended yet
   };
 
   if (pageToken && prevParamsRaw) {
@@ -28,17 +38,17 @@ export async function GET(req: NextRequest) {
       console.error("Failed to parse prevParams:", err);
     }
   } else {
-    // New search: build query
+    // New search: build query with LLM only for keywords & location
     try {
-      const ctgQuery = await buildCtgQuery({ keywords, statuses, location });
+      const ctgQuery = await buildCtgQuery({ keywords, statuses: [], location });
       queryParams = { ...queryParams, ...ctgQuery.queryParams };
     } catch (err) {
       console.error("LLM query failed, fallback to manual params:", err);
-      if (statuses.length > 0) queryParams["filter.overallStatus"] = statuses.join("|");
       if (location) queryParams["query.locn"] = location;
     }
   }
 
+  console.log("Final query params:", queryParams);
   const apiUrl = `https://clinicaltrials.gov/api/v2/studies?${new URLSearchParams(queryParams).toString()}`;
   console.log("ClinicalTrials.gov API query:", apiUrl);
 

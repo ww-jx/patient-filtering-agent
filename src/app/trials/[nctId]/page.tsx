@@ -34,6 +34,10 @@ interface ProtocolSection {
     officialTitle: string;
     organization: { fullName: string };
   };
+  descriptionModule: {
+    briefSummary?: string;
+    detailedSummary?: string;
+  }
   statusModule: {
     overallStatus: string;
     startDate: string;
@@ -74,6 +78,11 @@ export default function TrialPage() {
   const [results, setResults] = useState<PatientResult[]>([]);
   const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null);
 
+  const [summarised, setSummarised] = useState(false);
+  const [summarisedText, setSummarisedText] = useState<string | null>(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [originalSummary, setOriginalSummary] = useState<string>('');
+
   useEffect(() => {
     if (!params.nctId) return;
     const fetchStudy = async () => {
@@ -105,6 +114,14 @@ export default function TrialPage() {
     };
     fetchPatient();
   }, [patientUuid]);
+
+  useEffect(() => {
+    if (!study) return;
+    const brief = protocolSection.descriptionModule.briefSummary || '';
+    const detailed = protocolSection.descriptionModule.detailedSummary || '';
+    const combined = [brief, detailed].filter(Boolean).join('\n\n');
+    setOriginalSummary(combined);
+  }, [study]);
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
   if (!study) return <p className="text-center mt-10">Study not found.</p>;
@@ -185,6 +202,55 @@ export default function TrialPage() {
         </p>
         <p className="text-sm opacity-70">Sponsor: {sponsors?.[0]?.name || 'N/A'}</p>
       </div>
+
+      {/* Study Summary */}
+      {originalSummary && (
+        <div className="card-bordered">
+          <details open>
+            <summary className="flex justify-between items-center px-4 py-2 font-semibold bg-[var(--color-muted)]/20 rounded cursor-pointer">
+              <span>Study Summary</span>
+              <button
+                className="btn-secondary btn-sm"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (summarised) {
+                    setSummarised(false);
+                    return;
+                  }
+
+                  if (summarisedText) {
+                    setSummarised(true);
+                    return;
+                  }
+
+                  setLoadingSummary(true);
+                  try {
+                    const res = await fetch('/api/summariseTrial', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ trialDetails: originalSummary }),
+                    });
+                    const data = await res.json();
+                    if (data.result) {
+                      setSummarisedText(data.result);
+                      setSummarised(true);
+                    }
+                  } catch (err) {
+                    console.error('Failed to summarise trial:', err);
+                  } finally {
+                    setLoadingSummary(false);
+                  }
+                }}
+              >
+                {loadingSummary ? 'Summarising...' : summarised ? 'Show Original' : 'Summarise'}
+              </button>
+            </summary>
+            <div className="prose prose-invert max-w-none p-4">
+              <ReactMarkdown>{summarised ? summarisedText || originalSummary : originalSummary}</ReactMarkdown>
+            </div>
+          </details>
+        </div>
+      )}
 
       {/* Eligibility */}
       <div className="space-y-4 card-bordered">
