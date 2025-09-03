@@ -5,6 +5,37 @@ import { useParams, useSearchParams } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import type { PatientProfile } from '@/lib/types';
 
+// Helper function to format eligibility criteria text
+const formatEligibilityText = (text: string): string => {
+  if (!text) return 'No eligibility information available.';
+  
+  // Split by common patterns and format as list items
+  return text
+    .split(/(?:\n|\r\n|\r)(?=\s*[-•*]|\s*\d+\.)/g)
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => {
+      // Remove existing bullet points and numbering
+      const cleaned = line.replace(/^\s*[-•*]\s*|^\s*\d+\.\s*/, '').trim();
+      return cleaned;
+    })
+    .filter(line => line.length > 0)
+    .map(line => `• ${line}`)
+    .join('\n\n');
+};
+
+// Helper function to format study summary with better structure
+const formatStudySummary = (text: string): string => {
+  if (!text) return '';
+  
+  // Split into paragraphs and format
+  return text
+    .split(/\n\s*\n/)
+    .map(paragraph => paragraph.trim())
+    .filter(paragraph => paragraph.length > 0)
+    .join('\n\n');
+};
+
 interface EligibilityModule {
   eligibilityCriteria: string;
   healthyVolunteers: boolean;
@@ -176,7 +207,7 @@ export default function TrialPage() {
   return (
     <div className="max-w-5xl mx-auto p-8 space-y-6 bg-[var(--background)] text-[var(--foreground)]">
       {/* Back Button */}
-      <button onClick={() => window.history.back()} className="btn-secondary mb-4">
+      <button onClick={() => window.location.href = '/'} className="btn-secondary mb-4">
         ← Back
       </button>
 
@@ -205,12 +236,15 @@ export default function TrialPage() {
 
       {/* Study Summary */}
       {originalSummary && (
-        <div className="card-bordered">
+        <div className="card-bordered bg-gradient-to-br from-white to-[var(--color-primary-light)]/10">
           <details open>
-            <summary className="flex justify-between items-center px-4 py-2 font-semibold bg-[var(--color-muted)]/20 rounded cursor-pointer">
-              <span>Study Summary</span>
+            <summary className="flex justify-between items-center px-6 py-4 font-semibold bg-[var(--color-primary)]/10 rounded-lg cursor-pointer hover:bg-[var(--color-primary)]/15 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📋</span>
+                <span className="text-xl text-[var(--color-primary)]">Study Summary</span>
+              </div>
               <button
-                className="btn-secondary btn-sm"
+                className="btn-secondary text-sm px-4 py-2"
                 onClick={async (e) => {
                   e.stopPropagation();
                   if (summarised) {
@@ -242,67 +276,155 @@ export default function TrialPage() {
                   }
                 }}
               >
-                {loadingSummary ? 'Summarising...' : summarised ? 'Show Original' : 'Summarise'}
+                {loadingSummary ? (
+                  <span className="flex items-center gap-2">
+                    <span className="loading-shimmer w-4 h-4 rounded"></span>
+                    Summarising...
+                  </span>
+                ) : summarised ? 'Show Original' : 'Summarise'}
               </button>
             </summary>
-            <div className="prose prose-invert max-w-none p-4">
-              <ReactMarkdown>{summarised ? summarisedText || originalSummary : originalSummary}</ReactMarkdown>
+            <div className="mt-4 p-6 bg-white rounded-lg border border-[var(--color-primary)]/20 shadow-sm">
+              <div className="medical-content max-w-none">
+                <ReactMarkdown>
+                  {formatStudySummary(summarised ? summarisedText || originalSummary : originalSummary)}
+                </ReactMarkdown>
+              </div>
             </div>
           </details>
         </div>
       )}
 
       {/* Eligibility */}
-      <div className="space-y-4 card-bordered">
-        <h2 className="text-2xl font-semibold border-b pb-1 border-[var(--color-muted)]">
-          Eligibility Criteria
-        </h2>
-
-        <div className="prose prose-invert max-w-none bg-[var(--color-secondary-light)] p-4 rounded shadow-sm">
-          <ReactMarkdown>
-            {eligibilityModule.eligibilityCriteria || 'No eligibility info available.'}
-          </ReactMarkdown>
+      <div className="space-y-6 card-bordered bg-gradient-to-br from-white to-[var(--color-secondary-light)]/20">
+        <div className="flex items-center gap-3 pb-4 border-b border-[var(--color-primary)]/20">
+          <span className="text-3xl">✅</span>
+          <h2 className="text-2xl font-semibold text-[var(--color-primary)]">
+            Eligibility Criteria
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="font-medium">Healthy Volunteers:</span>{' '}
-            {eligibilityModule.healthyVolunteers ? 'Yes' : 'No'}
+        {/* Main Eligibility Text */}
+        <div className="bg-white rounded-xl p-6 border border-[var(--color-secondary)]/30 shadow-sm">
+          <div className="medical-content max-w-none">
+            <div className="space-y-3">
+              {formatEligibilityText(eligibilityModule.eligibilityCriteria).split('\n\n').map((item, index) => (
+                <div key={index} className="eligibility-item bg-[var(--color-secondary-light)]/30 hover:bg-[var(--color-secondary-light)]/50 transition-colors p-4 rounded-lg border border-[var(--color-secondary)]/10">
+                  <span className="text-readable">{item.replace(/^•\s*/, '')}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <span className="font-medium">Sex:</span> {eligibilityModule.sex}
+        </div>
+
+        {/* Eligibility Details Grid */}
+        <div className="bg-[var(--color-primary-light)]/20 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-[var(--color-primary)] mb-4 flex items-center gap-2">
+            <span>📊</span>
+            Key Requirements
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg p-4 border border-[var(--color-secondary)]/20 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🩺</span>
+                <span className="font-medium text-[var(--color-primary)]">Healthy Volunteers</span>
+              </div>
+              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                eligibilityModule.healthyVolunteers 
+                  ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]' 
+                  : 'bg-[var(--color-muted)]/20 text-[var(--color-muted)]'
+              }`}>
+                {eligibilityModule.healthyVolunteers ? 'Yes' : 'No'}
+              </span>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-[var(--color-secondary)]/20 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">👤</span>
+                <span className="font-medium text-[var(--color-primary)]">Sex</span>
+              </div>
+              <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-secondary)]/20 text-[var(--color-secondary)]">
+                {eligibilityModule.sex}
+              </span>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-[var(--color-secondary)]/20 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">⚧</span>
+                <span className="font-medium text-[var(--color-primary)]">Gender Based</span>
+              </div>
+              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                eligibilityModule.genderBased 
+                  ? 'bg-[var(--color-success)]/20 text-[var(--color-success)]' 
+                  : 'bg-[var(--color-muted)]/20 text-[var(--color-muted)]'
+              }`}>
+                {eligibilityModule.genderBased ? 'Yes' : 'No'}
+              </span>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-[var(--color-secondary)]/20 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🎂</span>
+                <span className="font-medium text-[var(--color-primary)]">Minimum Age</span>
+              </div>
+              <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-secondary)]/20 text-[var(--color-secondary)]">
+                {eligibilityModule.minimumAge || 'Not specified'}
+              </span>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-[var(--color-secondary)]/20 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🎯</span>
+                <span className="font-medium text-[var(--color-primary)]">Maximum Age</span>
+              </div>
+              <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-secondary)]/20 text-[var(--color-secondary)]">
+                {eligibilityModule.maximumAge || 'Not specified'}
+              </span>
+            </div>
+            
+            {eligibilityModule.genderDescription && (
+              <div className="bg-white rounded-lg p-4 border border-[var(--color-secondary)]/20 shadow-sm md:col-span-2 lg:col-span-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">📝</span>
+                  <span className="font-medium text-[var(--color-primary)]">Gender Description</span>
+                </div>
+                <p className="text-sm text-[var(--foreground)] leading-relaxed">
+                  {eligibilityModule.genderDescription}
+                </p>
+              </div>
+            )}
           </div>
-          <div>
-            <span className="font-medium">Gender Based:</span>{' '}
-            {eligibilityModule.genderBased ? 'Yes' : 'No'}
-          </div>
-          {eligibilityModule.genderDescription && (
-            <div className="md:col-span-2">
-              <span className="font-medium">Gender Description:</span>{' '}
-              {eligibilityModule.genderDescription}
+        </div>
+
+        {/* Eligibility Check Button */}
+        <div className="bg-white rounded-xl p-6 border border-[var(--color-primary)]/20">
+          {patientProfile ? (
+            <button
+              onClick={handleFilterPatients}
+              disabled={filtering}
+              className="btn-primary btn-enhanced text-base px-8 py-4 w-full md:w-auto shadow-brand hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              {filtering ? (
+                <>
+                  <div className="loading-shimmer w-5 h-5 rounded-full"></div>
+                  Checking Eligibility...
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">🔍</span>
+                  Check My Eligibility
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 p-4 bg-[var(--color-danger)]/10 rounded-lg border border-[var(--color-danger)]/20">
+              <span className="text-xl">⚠️</span>
+              <p className="text-[var(--color-danger)] font-medium">
+                No patient selected. Please provide a UUID in the URL to check eligibility.
+              </p>
             </div>
           )}
-          <div>
-            <span className="font-medium">Minimum Age:</span>{' '}
-            {eligibilityModule.minimumAge || 'Not specified'}
-          </div>
-          <div>
-            <span className="font-medium">Maximum Age:</span>{' '}
-            {eligibilityModule.maximumAge || 'Not specified'}
-          </div>
         </div>
-
-        {patientProfile ? (
-          <button
-            onClick={handleFilterPatients}
-            disabled={filtering}
-            className="btn-primary"
-          >
-            {filtering ? 'Checking Eligibility...' : 'Check My Eligibility'}
-          </button>
-        ) : (
-          <p className="text-[var(--color-danger)]">No patient selected. Provide a UUID in the URL.</p>
-        )}
       </div>
 
       {/* Patient Results */}

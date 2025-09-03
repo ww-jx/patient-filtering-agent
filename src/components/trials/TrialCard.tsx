@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 
 interface Study {
@@ -18,15 +17,43 @@ interface TrialCardProps {
   uuid: string;
 }
 
-// Map each status to a color class
-const statusColors: Record<string, string> = {
-  RECRUITING: 'text-success',
-  NOT_YET_RECRUITING: 'text-yellow-400',
-  ENROLLING_BY_INVITATION: 'text-primary',
-  ACTIVE_NOT_RECRUITING: 'text-muted',
-  COMPLETED: 'text-muted',
-  TERMINATED: 'text-danger',
-  WITHDRAWN: 'text-danger',
+// Map each status to a color class and background
+const statusColors: Record<string, { text: string; bg: string; border: string }> = {
+  RECRUITING: { 
+    text: 'text-[var(--color-success)]', 
+    bg: 'bg-[var(--color-success)]/10', 
+    border: 'border-[var(--color-success)]/30' 
+  },
+  NOT_YET_RECRUITING: { 
+    text: 'text-[var(--color-secondary)]', 
+    bg: 'bg-[var(--color-secondary)]/10', 
+    border: 'border-[var(--color-secondary)]/30' 
+  },
+  ENROLLING_BY_INVITATION: { 
+    text: 'text-[var(--color-primary)]', 
+    bg: 'bg-[var(--color-primary)]/10', 
+    border: 'border-[var(--color-primary)]/30' 
+  },
+  ACTIVE_NOT_RECRUITING: { 
+    text: 'text-[var(--color-muted)]', 
+    bg: 'bg-[var(--color-muted)]/10', 
+    border: 'border-[var(--color-muted)]/30' 
+  },
+  COMPLETED: { 
+    text: 'text-[var(--color-muted)]', 
+    bg: 'bg-[var(--color-muted)]/10', 
+    border: 'border-[var(--color-muted)]/30' 
+  },
+  TERMINATED: { 
+    text: 'text-[var(--color-danger)]', 
+    bg: 'bg-[var(--color-danger)]/10', 
+    border: 'border-[var(--color-danger)]/30' 
+  },
+  WITHDRAWN: { 
+    text: 'text-[var(--color-danger)]', 
+    bg: 'bg-[var(--color-danger)]/10', 
+    border: 'border-[var(--color-danger)]/30' 
+  },
 };
 
 export const TrialCard = ({ study, uuid }: TrialCardProps) => {
@@ -50,35 +77,43 @@ export const TrialCard = ({ study, uuid }: TrialCardProps) => {
       ? study.locations.join(' • ').slice(0, MAX_LOC) + '...'
       : study.locations.join(' • ');
 
+  const statusStyle = statusColors[study.status] || {
+    text: 'text-[var(--foreground)]',
+    bg: 'bg-[var(--color-muted)]/10',
+    border: 'border-[var(--color-muted)]/30'
+  };
+
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-white/60 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 sm:p-8 hover:border-primary/20">
-      <Link href={trialHref} className="block space-y-4 sm:space-y-5">
+    <div className="bg-white/95 backdrop-blur-sm border border-[var(--color-secondary)]/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 sm:p-8 hover:border-[var(--color-primary)]/30 marketing-card card-interactive">
+      <a href={trialHref} target="_blank" rel="noopener noreferrer" className="block space-y-4 sm:space-y-5">
         {/* Title and Status */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-          <h3 className="font-semibold text-base sm:text-lg text-primary leading-tight flex-1">
+          <h3 className="font-semibold text-base sm:text-lg text-[var(--color-primary)] leading-tight flex-1">
             {study.title}
           </h3>
-          <span className={`status-badge self-start ${statusColors[study.status] || 'text-foreground'}`}>
+          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${statusStyle.text} ${statusStyle.bg} ${statusStyle.border} self-start`}>
             {study.status.replace(/_/g, ' ')}
           </span>
         </div>
 
         {/* Timeline */}
-        <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm text-muted">
-          <span className="flex items-center gap-1">
-            <span className="text-brand-500">📅</span>
-            Start: {study.startDate}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="text-medical-500">⏰</span>
-            Completion: {study.completionDate}
-          </span>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm">
+          <div className="flex items-center gap-2 text-[var(--color-muted)]">
+            <span className="text-[var(--color-secondary)] text-base">📅</span>
+            <span className="font-medium">Start:</span>
+            <span className="text-[var(--foreground)]">{study.startDate}</span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--color-muted)]">
+            <span className="text-[var(--color-primary)] text-base">⏰</span>
+            <span className="font-medium">Completion:</span>
+            <span className="text-[var(--foreground)]">{study.completionDate}</span>
+          </div>
         </div>
 
         {/* Description */}
         {study.description && (
-          <div className="text-sm leading-relaxed">
-            <p className="text-foreground">
+          <div className="text-sm leading-relaxed bg-[var(--color-surface)] p-4 rounded-lg border border-[var(--color-border)]">
+            <p className="text-[var(--foreground)]">
               {truncatedDescription}
               {study.description.length > MAX_DESC && (
                 <button
@@ -87,7 +122,7 @@ export const TrialCard = ({ study, uuid }: TrialCardProps) => {
                     e.preventDefault();
                     toggleDesc();
                   }}
-                  className="text-primary font-medium ml-1 hover:underline focus:underline focus:outline-none"
+                  className="text-[var(--color-primary)] font-medium ml-1 hover:underline focus:underline focus:outline-none transition-colors"
                 >
                   {descExpanded ? 'Show less' : 'Show more'}
                 </button>
@@ -98,12 +133,12 @@ export const TrialCard = ({ study, uuid }: TrialCardProps) => {
 
         {/* Locations */}
         {study.locations.length > 0 && (
-          <div className="text-sm">
-            <div className="flex items-start gap-2">
-              <span className="text-warm-500 mt-0.5">📍</span>
+          <div className="text-sm bg-[var(--color-primary-light)]/20 p-4 rounded-lg border border-[var(--color-primary)]/20">
+            <div className="flex items-start gap-3">
+              <span className="text-[var(--color-secondary)] text-base mt-0.5">📍</span>
               <div className="flex-1">
-                <span className="font-medium text-muted">Locations: </span>
-                <span className="text-foreground">
+                <span className="font-medium text-[var(--color-primary)] block mb-1">Locations:</span>
+                <span className="text-[var(--foreground)]">
                   {truncatedLocations}
                   {study.locations.join(' • ').length > MAX_LOC && (
                     <button
@@ -112,7 +147,7 @@ export const TrialCard = ({ study, uuid }: TrialCardProps) => {
                         e.preventDefault();
                         toggleLoc();
                       }}
-                      className="text-primary font-medium ml-1 hover:underline focus:underline focus:outline-none"
+                      className="text-[var(--color-primary)] font-medium ml-1 hover:underline focus:underline focus:outline-none transition-colors"
                     >
                       {locExpanded ? 'Show less' : 'Show more'}
                     </button>
@@ -122,15 +157,15 @@ export const TrialCard = ({ study, uuid }: TrialCardProps) => {
             </div>
           </div>
         )}
-      </Link>
+      </a>
 
       {/* Action Button */}
-      <div className="pt-4 sm:pt-5 border-t border-primary/10">
+      <div className="pt-4 sm:pt-5 border-t border-[var(--color-primary)]/10">
         <a
           href={`https://clinicaltrials.gov/ct2/show/${study.nctId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-gradient-to-r from-primary to-secondary text-white text-sm w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+          className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white text-sm w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 hover:scale-[1.02] shadow-brand btn-enhanced"
           onClick={(e) => e.stopPropagation()}
         >
           <span>View on ClinicalTrials.gov</span>

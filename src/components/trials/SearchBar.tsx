@@ -16,7 +16,7 @@ export function SearchBar({
       <div className="relative">
         <input
           type="text"
-          placeholder="Search by condition, location, or study type"
+          placeholder="Search by condition, location"
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onSearch()}
@@ -34,7 +34,7 @@ export function SearchBar({
         <button
           onClick={() => !loading && onSearch()}
           disabled={loading}
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 text-sm sm:text-base"
+          className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-black px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 text-sm sm:text-base"
           title="Search for clinical trials"
         >
           {loading ? "Searching..." : "Search"}

@@ -5,13 +5,13 @@
   --background: #ffffff;
   --foreground: #1e293b;
 
-  /* Warm, welcoming primary colors */
-  --color-primary: #f59e0b;        /* warm amber for headings */
-  --color-primary-hover: #d97706;
-  --color-primary-light: #fef3c7;
-  --color-secondary: #059669;      /* fresh teal for buttons/borders */
-  --color-secondary-hover: #047857;
-  --color-secondary-light: #d1fae5;
+  /* Warm, welcoming primary colors - yellowish orange theme */
+  --color-primary: #f97316;        /* warm orange for headings */
+  --color-primary-hover: #ea580c;
+  --color-primary-light: #fed7aa;
+  --color-secondary: #f59e0b;      /* amber yellow for accents */
+  --color-secondary-hover: #d97706;
+  --color-secondary-light: #fef3c7;
   
   /* Extended color palette for marketing design - bright and fresh */
   --color-brand-50: #ecfdf5;
@@ -28,12 +28,12 @@
   --color-medical-600: #2563eb;
   --color-medical-700: #1d4ed8;
   
-  --color-warm-50: #fef7ed;
-  --color-warm-100: #fdedd3;
+  --color-warm-50: #fffbeb;
+  --color-warm-100: #fef3c7;
   --color-warm-200: #fed7aa;
-  --color-warm-500: #f97316;
-  --color-warm-600: #ea580c;
-  --color-warm-700: #c2410c;
+  --color-warm-500: #f59e0b;
+  --color-warm-600: #d97706;
+  --color-warm-700: #b45309;
   
   /* Status colors - vibrant and clear */
   --color-success: #10b981;
@@ -145,15 +145,32 @@ input::placeholder {
   /* Mobile-optimized spacing */
   .container-mobile { padding: 1rem; }
   .section-mobile { padding: 2rem 0; }
+  
+  /* Mobile-friendly form inputs */
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Better mobile scrolling */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile-optimized modal */
+  .modal-mobile {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
 }
 
 /* Marketing design utilities - light mode optimized */
 .bg-aurora {
   background: linear-gradient(120deg,
-    rgba(16,185,129,.08),
-    rgba(59,130,246,.08),
-    rgba(249,115,22,.08),
-    rgba(245,158,11,.08));
+    rgba(249,115,22,.12),
+    rgba(245,158,11,.12),
+    rgba(251,146,60,.08),
+    rgba(254,215,170,.08));
   background-size: 300% 300%;
   animation: gradient 14s ease infinite;
 }
@@ -211,9 +228,43 @@ input::placeholder {
   outline-offset: 2px;
 }
 
+/* Smooth micro-interactions */
+.interactive {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive:hover {
+  transform: translateY(-1px);
+}
+
+.interactive:active {
+  transform: translateY(0);
+}
+
+/* Button press animations */
+.btn-press {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* Smooth loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* Gradient text utility - bright and welcoming */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary), var(--color-medical-500));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary), #fb923c);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -225,7 +276,7 @@ input::placeholder {
 }
 
 .shadow-brand {
-  box-shadow: 0 10px 25px -5px rgba(16,185,129,.15);
+  box-shadow: 0 10px 25px -5px rgba(249,115,22,.15);
 }
 
 /* Backdrop blur utilities */
@@ -236,9 +287,10 @@ input::placeholder {
 
 /* Marketing card styles - bright and clean */
 .marketing-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.1);
   border-radius: 1rem;
   transition: all 0.3s ease;
 }
@@ -287,4 +339,110 @@ input::placeholder {
 
 .bg-gradient-cool {
   background: linear-gradient(135deg, var(--color-medical-50), var(--color-brand-50));
+}
+
+/* Enhanced text readability utilities */
+.text-readable {
+  line-height: 1.7;
+  word-spacing: 0.05em;
+}
+
+.text-section-header {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* Improved list styling for eligibility criteria */
+.eligibility-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.eligibility-item {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.eligibility-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--color-secondary);
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+/* Enhanced card hover effects */
+.card-interactive {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -10px rgba(249, 115, 22, 0.15);
+}
+
+/* Better button states */
+.btn-enhanced {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-enhanced:hover::before {
+  left: 100%;
+}
+
+/* Improved loading states */
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Better spacing for medical content */
+.medical-content {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--foreground);
+}
+
+.medical-content h1, .medical-content h2, .medical-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.medical-content p {
+  margin-bottom: 1rem;
+}
+
+.medical-content ul, .medical-content ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.medical-content li {
+  margin-bottom: 0.5rem;
 }

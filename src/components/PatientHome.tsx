@@ -80,7 +80,7 @@ export default function PatientHome({ profile }: Props) {
         <div className="relative">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
             <div className="text-center mb-8 sm:mb-12">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--color-primary)] mb-4">
                 Welcome, {profile.firstName} 👋
               </h1>
               <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
@@ -93,7 +93,7 @@ export default function PatientHome({ profile }: Props) {
               {/* Search Bar - Enhanced with glass morphism */}
               <div className="mb-6">
                 <div className="relative">
-                  <div className="absolute -inset-2 blur-xl opacity-20 bg-gradient-to-r from-primary/30 via-secondary/30 to-medical-500/30 rounded-2xl"></div>
+                  <div className="absolute -inset-2 blur-xl opacity-20 bg-gradient-to-r from-[var(--color-primary)]/30 via-[var(--color-secondary)]/30 to-[var(--color-medical-500)]/30 rounded-2xl"></div>
                   <div className="relative bg-white/80 backdrop-blur-sm border border-white/40 rounded-2xl p-1 shadow-xl-soft">
                     <SearchBar
                       keywords={keywords}
@@ -133,14 +133,14 @@ export default function PatientHome({ profile }: Props) {
                 <div className="mb-8">
                   <div className="bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl p-6 shadow-lg">
                     <div className="flex items-center justify-center gap-3 mb-4">
-                      <h3 className="text-lg font-semibold text-primary text-center">Try these sample searches:</h3>
+                      <h3 className="text-lg font-semibold text-[var(--color-primary)] text-center">Try these sample searches:</h3>
                       <div className="flex gap-1">
                         {demoQueriesSets.map((_, index) => (
                           <div
                             key={index}
                             className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentQuerySetIndex
-                              ? 'bg-primary'
-                              : 'bg-primary/30'
+                              ? 'bg-[var(--color-primary)]'
+                              : 'bg-[var(--color-primary)]/30'
                               }`}
                           />
                         ))}
@@ -165,14 +165,14 @@ export default function PatientHome({ profile }: Props) {
           {studies.length > 0 && (
             <div className="mb-8">
               <div className="text-center bg-white/70 backdrop-blur-sm border border-white/40 rounded-2xl p-6 shadow-lg max-w-2xl mx-auto">
-                <h2 className="text-xl sm:text-2xl font-bold text-primary mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-primary)] mb-2">
                   Clinical Trials Found
                 </h2>
                 <p className="text-sm text-slate-600 font-medium">
                   {studies.length} trial{studies.length !== 1 ? 's' : ''} matching your criteria
                 </p>
                 <div className="mt-3 flex items-center justify-center gap-2 text-xs text-slate-500">
-                  <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-[var(--color-secondary)] rounded-full animate-pulse"></div>
                   <span>Real-time results from ClinicalTrials.gov</span>
                 </div>
               </div>
@@ -188,7 +188,7 @@ export default function PatientHome({ profile }: Props) {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-secondary/20 to-medical-500/20 rounded-2xl blur opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-secondary)]/20 to-[var(--color-medical-500)]/20 rounded-2xl blur opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative bg-white/90 backdrop-blur-sm border border-white/60 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
                     <TrialCard study={{ ...study, locations: study.locations || [] }} uuid={profile.id} />
                   </div>
@@ -201,7 +201,7 @@ export default function PatientHome({ profile }: Props) {
           {nextPageToken && (
             <div className="flex justify-center mt-8 sm:mt-12">
               <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-medical-500 rounded-2xl blur opacity-30"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-secondary)] to-[var(--color-medical-500)] rounded-2xl blur opacity-30"></div>
                 <button
                   onClick={() =>
                     fetchStudies(
@@ -212,7 +212,7 @@ export default function PatientHome({ profile }: Props) {
                       manualLocation || profile.country || ""
                     )
                   }
-                  className="relative bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="relative bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] text-white px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none btn-enhanced"
                   disabled={loading}
                 >
                   {loading ? (
@@ -237,10 +237,10 @@ export default function PatientHome({ profile }: Props) {
 
       {/* Floating elements for visual interest */}
       <div className="fixed bottom-8 right-8 pointer-events-none z-10">
-        <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="w-12 h-12 bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-secondary)]/20 rounded-full blur-xl animate-pulse"></div>
       </div>
       <div className="fixed top-1/4 left-8 pointer-events-none z-10">
-        <div className="w-8 h-8 bg-gradient-to-br from-medical-500/20 to-primary/20 rounded-full blur-lg animate-bounce" style={{ animationDelay: '2s' }}></div>
+        <div className="w-8 h-8 bg-gradient-to-br from-[var(--color-medical-500)]/20 to-[var(--color-primary)]/20 rounded-full blur-lg animate-bounce" style={{ animationDelay: '2s' }}></div>
       </div>
     </div>
   );
