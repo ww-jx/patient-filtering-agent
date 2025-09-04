@@ -29,6 +29,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#059669" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="8f60c801-a74d-461d-8abc-aa06931d61f6"></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}
