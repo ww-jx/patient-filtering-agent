@@ -184,6 +184,36 @@ export default function PatientHome({ profile }: Props) {
             </div>
           )}
 
+          {/* No Results Found */}
+          {!loading && studies.length === 0 && keywords && (
+            <div className="mb-8">
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 rounded-2xl p-6 shadow-lg max-w-2xl mx-auto text-center">
+                <div className="flex flex-col items-center gap-3">
+                  <svg
+                    className="w-10 h-10 text-[var(--color-primary)]/60"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9.75 9.75h.008v.008H9.75V9.75zm4.5 0h.008v.008h-.008V9.75zM9 13.5h6m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <h3 className="text-lg font-semibold text-[var(--color-primary)]">
+                    No Results Found
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed max-w-md">
+                    We couldn’t find any clinical trials matching your criteria.
+                    Try adjusting your filters, keywords, or location and search again.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Trial Cards Grid - Enhanced with staggered animation */}
           <div className="grid gap-4 sm:gap-6 max-w-4xl mx-auto">
             {studies.map((study, index) => (
