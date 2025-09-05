@@ -5,6 +5,7 @@ import {
   getFileCacheStats,
   clearFileCache
 } from "./openRouter";
+import path from "path";
 
 interface CtgQueryInput {
   keywords: string;
@@ -79,7 +80,7 @@ export async function buildCtgQuery(
       apiInfo = await processFile(apiSpecFile);
     } else {
       // Try environment variable (backward compatibility)
-      const envPath = process.env.CT_OPENAPI_FILE;
+      const envPath = path.join(process.cwd(), process.env.CTG_API_SPEC || "");
       if (envPath) {
         console.log(`Processing file from env var: ${envPath}`);
         apiInfo = await processFile(envPath);
