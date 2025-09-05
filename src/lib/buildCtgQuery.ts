@@ -30,22 +30,14 @@ function getMinimalApiInfo(): string {
 ClinicalTrials.gov API Essential Parameters:
 
 Required:
-- query.term (string): Main search keywords
+- query.term (string): other terms to search for
 
 Optional Query:
 - query.locn (string): Location search terms
-- query.cond (string): Condition/disease search
+- query.cond (string): Conditions or diseases to search for
 
-Filters:
-- filter.overallStatus (string): Comma-separated list of statuses
-  Valid: RECRUITING, NOT_YET_RECRUITING, ENROLLING_BY_INVITATION, 
-         ACTIVE_NOT_RECRUITING, COMPLETED, SUSPENDED, TERMINATED, 
-         WITHDRAWN, AVAILABLE, APPROVED_FOR_MARKETING, UNKNOWN
 
-Settings:
-- pageSize (number): Results per page (default: 10, max: 1000)
-- countTotal (boolean): Include total count (default: false)
-- format (string): Response format (json or csv, default: json)
+This API uses Essie expression syntax for each field.
 
 Rules:
 - Use comma-separated values for arrays
@@ -80,7 +72,7 @@ export async function buildCtgQuery(
       apiInfo = await processFile(apiSpecFile);
     } else {
       // Try environment variable (backward compatibility)
-      const envPath = path.join(process.cwd(), process.env.CTG_API_SPEC || "");
+      const envPath = path.join(process.cwd(), "public/data/ctg/ctg-oas-v2.yaml");
       if (envPath) {
         console.log(`Processing file from env var: ${envPath}`);
         apiInfo = await processFile(envPath);
@@ -114,19 +106,22 @@ export async function buildCtgQuery(
   const prompt = `Build ClinicalTrials.gov API query parameters.
 
 Input:
-- Keywords: ${keywords}
+The user is looking for ${keywords}
 - Location: ${location || "none"}
 
 API Reference:
 ${apiInfo}
 
 Instructions:
-1. Use query.term for the main keywords
+1. Use query.term for other terms
+2. User query.cond for conditions and diseases
 3. Use query.locn for location if provided
 4. Set pageSize to 10
 5. Set countTotal to true
 6. Only include parameters that have values
 7. Ensure status values are valid from the API spec
+
+Use Essie expression syntax for fields.
 
 Return JSON object with parameter names as keys and their values.`;
 
