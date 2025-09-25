@@ -199,7 +199,7 @@ export default function EmailAuthForm({ onSubscribed }: Props) {
         {loading ? 'Subscribing...' : 'Subscribe'}
       </button>
       <p className="text-xs text-center text-[var(--color-muted)]">
-        We\'ll email you a confirmation and deliver your weekly brief.
+        Weapos;ll email you a confirmation and deliver your weekly brief.
       </p>
       <p className="text-[10px] text-center text-slate-500 leading-relaxed">
         By subscribing you acknowledge this newsletter is for information only and not a
