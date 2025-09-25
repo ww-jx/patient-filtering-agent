@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TrialFinder — Discover Clinical Trials for Your Health Condition",
-  description: "Find clinical trials relevant to your medical condition with our comprehensive database and personalized matching system. Connect with breakthrough treatments and cutting-edge research studies.",
+  title: "GiraffeGuru — Weekly Research Newsletter for Your Chronic Health Conditions",
+  description: "Subscribe to a weekly newsletter that curates the latest medical papers, treatment advances, and new clinical trials for chronic health conditions like type 2 diabetes, COPD, rheumatoid arthritis, chronic kidney disease, multiple sclerosis, and more.",
 };
 
 export default function RootLayout({
