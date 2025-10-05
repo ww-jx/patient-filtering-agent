@@ -88,69 +88,106 @@ export default function HomePage() {
               </div>
 
               {/* Newsletter Digest Preview */}
-              <div className="relative">
-                <div className="absolute -inset-6 blur-3xl opacity-25 bg-gradient-to-tr from-orange-300/30 via-amber-300/30 to-yellow-300/20 rounded-3xl"></div>
-                
-                {/* Magic Giraffe Mascot positioned above the window */}
-                <div className="absolute -top-12 sm:-top-16 left-1/2 transform -translate-x-1/2 z-20">
-                  <div className="animate-float">
-                    <Image
-                      src="/giraffe.webp"
-                      alt="Magic Giraffe delivering your weekly brief"
-                      width={120}
-                      height={120}
-                      className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 drop-shadow-2xl"
-                    />
+              <div className="relative space-y-6">
+                <div className="relative">
+                  <div className="absolute -inset-6 blur-3xl opacity-25 bg-gradient-to-tr from-orange-300/30 via-amber-300/30 to-yellow-300/20 rounded-3xl"></div>
+                  
+                  {/* Magic Giraffe Mascot positioned above the window */}
+                  <div className="absolute -top-12 sm:-top-16 left-1/2 transform -translate-x-1/2 z-20">
+                    <div className="animate-float">
+                      <Image
+                        src="/giraffe.webp"
+                        alt="Magic Giraffe delivering your weekly brief"
+                        width={120}
+                        height={120}
+                        className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 drop-shadow-2xl"
+                      />
+                    </div>
                   </div>
+
+                  <div className="relative rounded-3xl marketing-card shadow-xl-soft ring-1 ring-orange-200/40 overflow-hidden">
+                    <div className="p-5 border-b border-orange-200/60">
+                      <div className="flex gap-1">
+                        <span className="w-3 h-3 rounded-full bg-orange-400"></span>
+                        <span className="w-3 h-3 rounded-full bg-amber-400"></span>
+                        <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
+                      </div>
+                    </div>
+                    <div className="p-4 sm:p-6 space-y-4">
+                      {/* PubMed Highlights */}
+                      <div className="bg-orange-50/80 backdrop-blur-sm rounded-xl p-4 border border-orange-200/50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-slate-500">📰</span>
+                          <span className="text-xs sm:text-sm text-slate-600 font-medium">This week on PubMed</span>
+                        </div>
+                        <ul className="space-y-2 text-xs sm:text-sm text-slate-700">
+                          <li className="flex items-start gap-2">
+                            <span>•</span>
+                            <span>GLP‑1 therapies and cardiovascular outcomes in Type 2 Diabetes — systematic review</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span>•</span>
+                            <span>Long‑acting bronchodilators in COPD: real‑world exacerbation reduction study</span>
+                          </li>
+                        </ul>
+                      </div>
+
+                      {/* Trials Highlights */}
+                      <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 border border-amber-200 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-slate-500">🧪</span>
+                          <span className="text-xs sm:text-sm text-slate-600 font-medium">New clinical trials for Rheumatoid Arthritis</span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs sm:text-sm text-slate-800">JAK inhibitor vs. Methotrexate — flare prevention</span>
+                            <span className="status-badge status-recruiting text-xs">Recruiting</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs sm:text-sm text-slate-800">Biologic tapering strategy in sustained remission</span>
+                            <span className="status-badge status-enrolling text-xs">Enrolling</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-2 sm:mt-3 text-xs text-slate-500 text-center font-medium px-4">Curated summaries • Chronic condition focus • Private by design</p>
                 </div>
 
-                <div className="relative rounded-3xl marketing-card shadow-xl-soft ring-1 ring-orange-200/40 overflow-hidden">
-                  <div className="p-5 border-b border-orange-200/60">
-                    <div className="flex gap-1">
-                      <span className="w-3 h-3 rounded-full bg-orange-400"></span>
-                      <span className="w-3 h-3 rounded-full bg-amber-400"></span>
-                      <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
-                    </div>
-                  </div>
-                  <div className="p-4 sm:p-6 space-y-4">
-                    {/* PubMed Highlights */}
-                    <div className="bg-orange-50/80 backdrop-blur-sm rounded-xl p-4 border border-orange-200/50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-slate-500">📰</span>
-                        <span className="text-xs sm:text-sm text-slate-600 font-medium">This week on PubMed</span>
+                {/* Researcher Section */}
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl ring-1 ring-slate-200/50">
+                  <h3 className="text-xl font-bold text-gradient mb-3">
+                    Researcher or PhD?
+                  </h3>
+                  <p className="text-slate-700 mb-4 leading-relaxed text-sm">
+                    Just replace <code className="bg-slate-100 px-2 py-1 rounded text-xs">arxiv.org</code> or <code className="bg-slate-100 px-2 py-1 rounded text-xs">medrxiv.org</code> with <code className="bg-slate-100 px-2 py-1 rounded text-xs">giraffeguru.com</code> to use our AI assistant to understand research papers.
+                  </p>
+                  <div className="space-y-2.5">
+                    <p className="text-xs font-semibold text-slate-600">Examples:</p>
+                    {/* medRxiv example */}
+                    <a 
+                      href="/content/10.1101/2024.01.18.24301500v4"
+                      className="block p-3 bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 transition-colors duration-200 group"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs font-semibold text-slate-800 group-hover:text-orange-700">GLP-1 RA Prescribing Trends</p>
+                        <p className="text-xs text-slate-400 line-through">medrxiv.org/content/10.1101/2024.01.18.24301500v4</p>
+                        <p className="text-xs text-orange-600 font-medium">giraffeguru.com/content/10.1101/2024.01.18.24301500v4</p>
                       </div>
-                      <ul className="space-y-2 text-xs sm:text-sm text-slate-700">
-                        <li className="flex items-start gap-2">
-                          <span>•</span>
-                          <span>GLP‑1 therapies and cardiovascular outcomes in Type 2 Diabetes — systematic review</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span>•</span>
-                          <span>Long‑acting bronchodilators in COPD: real‑world exacerbation reduction study</span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    {/* Trials Highlights */}
-                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 border border-amber-200 shadow-sm">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-slate-500">🧪</span>
-                        <span className="text-xs sm:text-sm text-slate-600 font-medium">New clinical trials for Rheumatoid Arthritis</span>
+                    </a>
+                    {/* arXiv example */}
+                    <a 
+                      href="/pdf/2510.01309"
+                      className="block p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors duration-200 group"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs font-semibold text-slate-800 group-hover:text-blue-700">Cosmological Constraints on Secluded Dark Radiation</p>
+                        <p className="text-xs text-slate-400 line-through">arxiv.org/pdf/2510.01309</p>
+                        <p className="text-xs text-blue-600 font-medium">giraffeguru.com/pdf/2510.01309</p>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs sm:text-sm text-slate-800">JAK inhibitor vs. Methotrexate — flare prevention</span>
-                          <span className="status-badge status-recruiting text-xs">Recruiting</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs sm:text-sm text-slate-800">Biologic tapering strategy in sustained remission</span>
-                          <span className="status-badge status-enrolling text-xs">Enrolling</span>
-                        </div>
-                      </div>
-                    </div>
+                    </a>
                   </div>
                 </div>
-                <p className="mt-2 sm:mt-3 text-xs text-slate-500 text-center font-medium px-4">Curated summaries • Chronic condition focus • Private by design</p>
               </div>
             </div>
           </div>
