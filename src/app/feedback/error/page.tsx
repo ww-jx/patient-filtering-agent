@@ -22,7 +22,7 @@ export default function UnsubscribeErrorPage() {
         <XCircleIcon />
 
         <h1 className="text-3xl md:text-4xl font-bold text-gradient mb-4 text-heading">
-          Unsubscribe Failed!
+          Feedback Failed
         </h1>
 
         <p className="text-readable text-muted mb-8">
