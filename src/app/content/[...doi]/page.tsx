@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import ChatWidget from '@/components/papers/ChatWidget';
+import NavigationPanel from '@/components/papers/NavigationPanel';
 import { parseMedrxivId, parseBiorxivId, getMedrxivUrls, getBiorxivUrls, detectPaperSource } from '@/lib/papers';
 import styles from './page.module.css';
 
@@ -51,6 +52,7 @@ export default async function ContentPage({ params }: { params: Promise<{ doi: s
 
   return (
     <div className={styles.container}>
+      <NavigationPanel paperId={parsed.id} />
       <iframe
         id="pdfFrame"
         src={urls.viewerUrl}

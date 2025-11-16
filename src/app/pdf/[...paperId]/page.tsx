@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import ChatWidget from '@/components/papers/ChatWidget';
+import NavigationPanel from '@/components/papers/NavigationPanel';
 import { parseArxivId, getArxivUrls } from '@/lib/papers';
 import styles from './page.module.css';
 
@@ -15,6 +16,7 @@ export default async function ArxivPdfPage({ params }: { params: Promise<{ paper
 
   return (
     <div className={styles.container}>
+      <NavigationPanel paperId={parsed.id} />
       <iframe
         id="pdfFrame"
         src={urls.viewerUrl}
