@@ -19,7 +19,7 @@
 }
 
 /* When navigation panel is collapsed, iframe takes full width */
-.iframe:has(+ .collapsed) {
+.container:has(.collapsedPanel) .iframe {
   margin-left: 0;
 }
 
@@ -32,6 +32,12 @@
     margin-left: 0;
     margin-top: 40vh; /* Height of navigation panel on mobile */
     max-height: 60vh;
+  }
+
+  /* When navigation panel is collapsed on mobile, iframe takes full height */
+  .container:has(.collapsedPanel) .iframe {
+    margin-top: 0;
+    max-height: 100vh;
   }
 }
 
