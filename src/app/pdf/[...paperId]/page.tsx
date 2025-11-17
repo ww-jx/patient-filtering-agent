@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation';
-import ChatWidget from '@/components/papers/ChatWidget';
-import NavigationPanel from '@/components/papers/NavigationPanel';
+import PdfViewerLayout from '@/components/papers/PdfViewerLayout';
 import { parseArxivId, getArxivUrls } from '@/lib/papers';
-import styles from './page.module.css';
 
 export default async function ArxivPdfPage({ params }: { params: Promise<{ paperId: string[] }> }) {
   const { paperId } = await params;
@@ -15,16 +13,12 @@ export default async function ArxivPdfPage({ params }: { params: Promise<{ paper
   const urls = getArxivUrls(parsed.id);
 
   return (
-    <div className={styles.container}>
-      <NavigationPanel paperId={parsed.id} />
-      <iframe
-        id="pdfFrame"
-        src={urls.viewerUrl}
-        title={`arXiv PDF Viewer - ${parsed.id}`}
-        className={styles.iframe}
-      />
-      <ChatWidget paperId={parsed.id} parsedPaper={parsed} />
-    </div>
+    <PdfViewerLayout
+      paperId={parsed.id}
+      parsedPaper={parsed}
+      pdfViewerUrl={urls.viewerUrl}
+      pdfTitle={`arXiv PDF Viewer - ${parsed.id}`}
+    />
   );
 }
 

@@ -18,10 +18,16 @@ interface FigureItem {
 
 interface NavigationPanelProps {
   paperId: string;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
-const NavigationPanel: React.FC<NavigationPanelProps> = ({ paperId }) => {
+const NavigationPanel: React.FC<NavigationPanelProps> = ({ paperId, onCollapseChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleCollapseToggle = (collapsed: boolean) => {
+    setIsCollapsed(collapsed);
+    onCollapseChange?.(collapsed);
+  };
   const [activeTab, setActiveTab] = useState<'toc' | 'figures'>('toc');
 
   // Mock TOC data - in real implementation, this would be extracted from PDF
@@ -62,7 +68,7 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ paperId }) => {
       <div className={styles.collapsedPanel}>
         <button
           className={styles.expandButton}
-          onClick={() => setIsCollapsed(false)}
+          onClick={() => handleCollapseToggle(false)}
           aria-label="Expand navigation panel"
           title="Expand navigation"
         >
@@ -91,7 +97,7 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ paperId }) => {
         </div>
         <button
           className={styles.collapseButton}
-          onClick={() => setIsCollapsed(true)}
+          onClick={() => handleCollapseToggle(true)}
           aria-label="Collapse navigation panel"
           title="Collapse navigation"
         >
