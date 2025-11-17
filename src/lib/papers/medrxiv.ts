@@ -84,9 +84,10 @@ export function getMedrxivUrls(medrxivId: string, baseUrl?: string): PaperUrls {
   }
   
   const encodedPdfUrl = encodeURIComponent(proxyUrl);
-  const viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodedPdfUrl}&sidebarViewOnLoad=0`;
+  // Use locally hosted PDF.js viewer for same-origin access
+  const viewerUrl = `/pdfjs/viewer.html?file=${encodedPdfUrl}`;
   const fileName = `medrxiv-${medrxivId.replace(/[./]/g, '-').toLowerCase()}`;
-  
+
   return {
     pdfUrl,
     abstractUrl,
