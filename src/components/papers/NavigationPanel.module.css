@@ -236,6 +236,46 @@
   text-align: center;
 }
 
+/* Loading and empty states */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+}
+
+.emptyState p {
+  margin: 8px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+.emptyHint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.loadingSpinner {
+  display: inline-block;
+  animation: pulse 1.5s ease-in-out infinite;
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* Scrollbar styling */
 .content::-webkit-scrollbar {
   width: 6px;
