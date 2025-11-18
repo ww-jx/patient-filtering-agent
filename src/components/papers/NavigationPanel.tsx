@@ -77,17 +77,28 @@ const NavigationPanel: React.FC<NavigationPanelProps> = ({ paperId, onCollapseCh
         }, 500);
 
         // Cleanup after 10 seconds if PDF never loads
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           clearInterval(checkPdfReady);
           setIsLoading(false);
         }, 10000);
+
+        // Return cleanup function
+        return () => {
+          clearInterval(checkPdfReady);
+          clearTimeout(timeoutId);
+        };
       } catch (error) {
         console.error('Error extracting PDF data:', error);
         setIsLoading(false);
       }
     };
 
-    extractPdfData();
+    const cleanup = extractPdfData();
+
+    // Cleanup on unmount or paperId change
+    return () => {
+      cleanup?.then(cleanupFn => cleanupFn?.());
+    };
   }, [paperId]);
 
   // Extract outline items recursively
