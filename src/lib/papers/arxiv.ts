@@ -70,9 +70,10 @@ export function getArxivUrls(arxivId: string): PaperUrls {
   const pdfUrl = `https://arxiv.org/pdf/${arxivId}`;
   const abstractUrl = `https://arxiv.org/abs/${arxivId}`;
   const encodedPdfUrl = encodeURIComponent(pdfUrl);
-  const viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodedPdfUrl}&sidebarViewOnLoad=0`;
+  // Use locally hosted PDF.js viewer for same-origin access
+  const viewerUrl = `/pdfjs/viewer.html?file=${encodedPdfUrl}`;
   const fileName = `arxiv-${arxivId.replace(/[./]/g, '-').toLowerCase()}`;
-  
+
   return {
     pdfUrl,
     abstractUrl,

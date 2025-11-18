@@ -6,6 +6,64 @@ import { parsePaperId, getPaperUrls, PaperSource } from '@/lib/papers';
  * Downloads PDFs from paper sources and serves them with proper CORS headers
  * This bypasses CORS issues when loading PDFs in PDF.js viewer
  */
+
+/**
+ * Fetch PDF with retry logic and enhanced headers to bypass Cloudflare protection
+ * Used for bioRxiv which implemented Cloudflare protection in May 2025
+ */
+async function fetchWithRetry(
+  pdfUrl: string,
+  abstractUrl: string,
+  maxRetries = 3
+): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(pdfUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': 'application/pdf,application/x-pdf,*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': abstractUrl,
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'same-origin',
+          'Upgrade-Insecure-Requests': '1',
+        },
+      });
+
+      // If successful, return immediately
+      if (response.ok) {
+        return response;
+      }
+
+      // Retry on rate limiting or service unavailable
+      if (response.status === 429 || response.status === 503) {
+        if (attempt < maxRetries - 1) {
+          const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
+          console.log(`Rate limited or service unavailable, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+
+      // For other errors, return the response
+      return response;
+
+    } catch (error) {
+      // On network error, retry with exponential backoff
+      if (attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 1000;
+        console.log(`Network error, retrying in ${delay}ms...`, error);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error(`Failed to fetch PDF after ${maxRetries} attempts`);
+}
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get('id');
@@ -30,11 +88,9 @@ export async function GET(request: NextRequest) {
   try {
     // Fetch the PDF from the source
     const urls = getPaperUrls(parsed.id, parsed.source);
-    const pdfResponse = await fetch(urls.pdfUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; GiraffeGuru/1.0)',
-      },
-    });
+
+    // Fetch PDF with retry logic and enhanced headers for Cloudflare bypass
+    const pdfResponse = await fetchWithRetry(urls.pdfUrl, urls.abstractUrl, 3);
 
     if (!pdfResponse.ok) {
       console.error(`Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);

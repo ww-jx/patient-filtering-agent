@@ -84,9 +84,10 @@ export function getBiorxivUrls(biorxivId: string, baseUrl?: string): PaperUrls {
   }
   
   const encodedPdfUrl = encodeURIComponent(proxyUrl);
-  const viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodedPdfUrl}&sidebarViewOnLoad=0`;
+  // Use locally hosted PDF.js viewer for same-origin access
+  const viewerUrl = `/pdfjs/viewer.html?file=${encodedPdfUrl}`;
   const fileName = `biorxiv-${biorxivId.replace(/[./]/g, '-').toLowerCase()}`;
-  
+
   return {
     pdfUrl,
     abstractUrl,

@@ -117,13 +117,49 @@ export function getPaperAiContext(parsed: ParsedPaperId): string {
 
 /**
  * Process page references in content for clickable links
+ * Handles multiple formats:
+ * - (page 5)
+ * - (pages 5-7)
+ * - (p. 5)
+ * - (pp. 5-7)
+ * - on page 5
+ * - see page 5
  */
 export function processPageReferences(content: string): string {
-  return content.replace(/\(\s*page\s+(\d+(?:\s*,\s*page\s+\d+)*)\s*\)/g, (match, pageList: string) => {
-    const pages = pageList.split(/\s*,\s*page\s+/);
+  // Replace various page reference patterns
+  let processed = content;
+
+  // Pattern 1: (page 5) or (page 5, page 6)
+  processed = processed.replace(/\(\s*page\s+(\d+(?:\s*,\s*page\s+\d+)*)\s*\)/gi, (match, pageList: string) => {
+    const pages = pageList.split(/\s*,\s*page\s+/i);
     const links = pages.map((pageNum: string) => `[page ${pageNum.trim()}](#page-${pageNum.trim()})`);
     return `(${links.join(', ')})`;
   });
+
+  // Pattern 2: (pages 5-7) - page ranges
+  processed = processed.replace(/\(\s*pages?\s+(\d+)\s*-\s*(\d+)\s*\)/gi, (match, start, end) => {
+    return `([pages ${start}-${end}](#page-${start}))`;
+  });
+
+  // Pattern 3: (p. 5) or (pp. 5-7)
+  processed = processed.replace(/\(\s*pp?\.\s+(\d+)(?:\s*-\s*(\d+))?\s*\)/gi, (match, start, end) => {
+    if (end) {
+      return `([p. ${start}-${end}](#page-${start}))`;
+    }
+    return `([p. ${start}](#page-${start}))`;
+  });
+
+  // Pattern 4: "on page 5" or "see page 5" (not in parentheses)
+  processed = processed.replace(/\b(on|see|found on|described on|shown on)\s+page\s+(\d+)/gi, (match, prefix, pageNum) => {
+    return `${prefix} [page ${pageNum}](#page-${pageNum})`;
+  });
+
+  // Pattern 5: "Figure 1 (page 5)" - specifically for figures/tables
+  processed = processed.replace(/(Figure|Table|Fig\.|Tab\.)\s+(\d+[a-z]?)\s*\(\s*page\s+(\d+)\s*\)/gi, (match, type, num, pageNum) => {
+    return `${type} ${num} ([page ${pageNum}](#page-${pageNum}))`;
+  });
+
+  return processed;
 }
 
 /**

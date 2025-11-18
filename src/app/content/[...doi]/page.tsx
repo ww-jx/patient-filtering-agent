@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
-import ChatWidget from '@/components/papers/ChatWidget';
+import PdfViewerLayout from '@/components/papers/PdfViewerLayout';
 import { parseMedrxivId, parseBiorxivId, getMedrxivUrls, getBiorxivUrls, detectPaperSource } from '@/lib/papers';
-import styles from './page.module.css';
 
 export default async function ContentPage({ params }: { params: Promise<{ doi: string[] }> }) {
   const { doi } = await params;
@@ -50,15 +49,12 @@ export default async function ContentPage({ params }: { params: Promise<{ doi: s
   }
 
   return (
-    <div className={styles.container}>
-      <iframe
-        id="pdfFrame"
-        src={urls.viewerUrl}
-        title={`${parsed.source} PDF Viewer - ${parsed.id}`}
-        className={styles.iframe}
-      />
-      <ChatWidget paperId={parsed.id} parsedPaper={parsed} />
-    </div>
+    <PdfViewerLayout
+      paperId={parsed.id}
+      parsedPaper={parsed}
+      pdfViewerUrl={urls.viewerUrl}
+      pdfTitle={`${parsed.source} PDF Viewer - ${parsed.id}`}
+    />
   );
 }
 
